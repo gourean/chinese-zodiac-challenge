@@ -142,13 +142,80 @@
         #start-overlay {
             position: absolute;
             top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(139, 0, 0, 0.4);
+            background: rgba(139, 0, 0, 0.7);
+            backdrop-filter: blur(5px);
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
             border-radius: 10px;
             z-index: 10;
+        }
+
+        /* Graphical Instructions */
+        .instruction-container {
+            margin: 15px 0;
+            position: relative;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 15px;
+            border-radius: 12px;
+            border: 2px solid var(--cny-gold);
+        }
+        
+        .mini-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 6px;
+            width: 180px;
+        }
+        
+        .mini-tile {
+            width: 100%;
+            aspect-ratio: 1;
+            background: #fff3e0;
+            border: 1px solid #ffcc80;
+            border-radius: 4px;
+        }
+
+        .hand-cursor {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            font-size: 2.5rem;
+            transform: translate(-50%, -50%);
+            animation: drag-demo 2s infinite ease-in-out;
+            pointer-events: none;
+            text-shadow: 2px 2px 0px rgba(255,255,255,0.8);
+        }
+
+        @keyframes drag-demo {
+            0% { transform: translate(-80px, 0); }
+            50% { transform: translate(50px, 0); }
+            100% { transform: translate(-80px, 0); }
+        }
+
+        /* Countdown Overlay */
+        #countdown-overlay {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(139, 0, 0, 0.85);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border-radius: 10px;
+            z-index: 20;
+            color: var(--cny-gold);
+            font-size: 6rem;
+            font-weight: bold;
+            font-family: 'Ma Shan Zheng', cursive;
+            text-shadow: 0 0 20px var(--cny-bright-red);
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.1); opacity: 0.9; }
+            100% { transform: scale(1); opacity: 1; }
         }
 
         /* Buttons */
@@ -183,13 +250,6 @@
         
         button.secondary { background: #eee; color: #333; border-color: #ccc; box-shadow: 0 4px 0 #bbb; }
 
-        /* Animations */
-        @keyframes shake {
-            0%, 100% { transform: translateX(0); }
-            25% { transform: translateX(-5px); }
-            75% { transform: translateX(5px); }
-        }
-
         /* Leaderboard */
         table { width: 100%; border-collapse: collapse; margin-top: 15px; }
         th, td { padding: 12px; border-bottom: 1px solid #ffd54f; text-align: left; }
@@ -221,6 +281,13 @@
         @media (max-width: 500px) {
             .zodiac-list { grid-template-columns: repeat(3, 1fr); }
             h1 { font-size: 2rem; }
+            /* Adjust instructions for mobile grid */
+            .mini-grid { grid-template-columns: repeat(3, 1fr); width: 140px; }
+            @keyframes drag-demo {
+                0% { transform: translate(-50px, 0); }
+                50% { transform: translate(50px, 0); }
+                100% { transform: translate(-50px, 0); }
+            }
         }
     </style>
 </head>
@@ -247,11 +314,23 @@
         </ul>
 
         <div id="start-overlay">
-            <div style="color: white; font-size: 1.2rem; margin-bottom: 20px; text-shadow: 1px 1px 2px black;">
+            <div style="color: white; font-size: 1.2rem; text-shadow: 1px 1px 2px black;">
                 Arrange the animals in order!
             </div>
-            <button class="primary-btn" onclick="startGame()">Start Game</button>
+            
+            <div class="instruction-container">
+                <div class="mini-grid">
+                    <div class="mini-tile"></div><div class="mini-tile"></div><div class="mini-tile"></div><div class="mini-tile"></div>
+                    <div class="mini-tile"></div><div class="mini-tile"></div><div class="mini-tile"></div><div class="mini-tile"></div>
+                    <div class="mini-tile"></div><div class="mini-tile"></div><div class="mini-tile"></div><div class="mini-tile"></div>
+                </div>
+                <div class="hand-cursor">👆</div>
+            </div>
+
+            <button class="primary-btn" onclick="startPreGameCountdown()">Start Game</button>
         </div>
+
+        <div id="countdown-overlay" class="hidden">3</div>
     </div>
 
     <!-- SECTION 2: RESULT -->
@@ -325,12 +404,11 @@
         const listEl = document.getElementById('zodiac-list');
         const timeDisplay = document.getElementById('time-display');
         const startOverlay = document.getElementById('start-overlay');
+        const countdownOverlay = document.getElementById('countdown-overlay');
         const musicBtn = document.getElementById('music-toggle');
         const bgm = document.getElementById('bgm-audio');
 
-        // --- SOUND EFFECTS ---
-        // Removed AudioContext logic as requested, keeping only BGM control
-
+        // --- SOUND & MUSIC ---
         function toggleMusic() {
             if (bgm.paused) {
                 bgm.play().catch(e => console.log("Interaction required first"));
@@ -347,6 +425,7 @@
             resultArea.style.display = 'none';
             leaderboardArea.style.display = 'none';
             startOverlay.style.display = 'flex';
+            countdownOverlay.classList.add('hidden');
             listEl.classList.add('blurred');
             timeDisplay.innerText = "0.0";
             isPlaying = false;
@@ -370,12 +449,35 @@
             }, 600);
         }
 
-        function startGame() {
-            // Try to auto-start music if not playing
+        // --- COUNTDOWN & START LOGIC ---
+        function startPreGameCountdown() {
+            // 1. Try to auto-start music if not playing
             if(bgm.paused) {
                 bgm.play().then(() => musicBtn.innerText = "🔊").catch(() => {});
             }
 
+            // 2. Hide Start Overlay, Show Countdown
+            startOverlay.style.display = 'none';
+            countdownOverlay.classList.remove('hidden');
+            
+            let count = 3;
+            countdownOverlay.innerText = count;
+            
+            const countTimer = setInterval(() => {
+                count--;
+                if (count > 0) {
+                    countdownOverlay.innerText = count;
+                } else if (count === 0) {
+                    countdownOverlay.innerText = "GO!";
+                } else {
+                    clearInterval(countTimer);
+                    countdownOverlay.classList.add('hidden');
+                    realStartGame();
+                }
+            }, 1000);
+        }
+
+        function realStartGame() {
             clearInterval(shuffleInterval); // Stop visual shuffling
             
             // Do a real rigorous shuffle
@@ -388,7 +490,6 @@
             renderTiles(true); // Render with drag listeners
             
             listEl.classList.remove('blurred');
-            startOverlay.style.display = 'none';
             
             startTimer();
         }
