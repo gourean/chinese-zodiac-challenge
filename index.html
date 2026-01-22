@@ -127,8 +127,14 @@
         .zodiac-item:active { cursor: grabbing; transform: scale(1.05); }
         .zodiac-item.dragging { opacity: 0.4; transform: scale(0.9); }
         
-        .zodiac-item.correct { background-color: #c8e6c9; border-color: #2e7d32; box-shadow: 0 0 10px #2e7d32; }
-        .zodiac-item.wrong { background-color: #ffcdd2; border-color: #c62828; animation: shake 0.5s; }
+        .zodiac-item.correct { 
+            background-color: #c8e6c9; 
+            border-color: #2e7d32; 
+            box-shadow: 0 0 15px #2e7d32; 
+            color: #1b5e20;
+            transform: scale(1.05);
+            transition: all 0.3s ease;
+        }
         
         .emoji { font-size: 2.5rem; margin-bottom: 5px; }
 
@@ -246,8 +252,6 @@
             </div>
             <button class="primary-btn" onclick="startGame()">Start Game</button>
         </div>
-
-        <button onclick="checkOrder()" id="check-btn" class="hidden" style="margin-top: 20px;">Check Order</button>
     </div>
 
     <!-- SECTION 2: RESULT -->
@@ -321,7 +325,6 @@
         const listEl = document.getElementById('zodiac-list');
         const timeDisplay = document.getElementById('time-display');
         const startOverlay = document.getElementById('start-overlay');
-        const checkBtn = document.getElementById('check-btn');
         const musicBtn = document.getElementById('music-toggle');
         const bgm = document.getElementById('bgm-audio');
 
@@ -343,10 +346,10 @@
             gameArea.style.display = 'block';
             resultArea.style.display = 'none';
             leaderboardArea.style.display = 'none';
-            checkBtn.classList.add('hidden');
             startOverlay.style.display = 'flex';
             listEl.classList.add('blurred');
             timeDisplay.innerText = "0.0";
+            isPlaying = false;
             
             // Create initial array
             currentOrder = [...correctOrder];
@@ -381,14 +384,13 @@
                 swapItemsInArray(currentOrder, i, j);
             }
             
+            isPlaying = true;
             renderTiles(true); // Render with drag listeners
             
             listEl.classList.remove('blurred');
             startOverlay.style.display = 'none';
-            checkBtn.classList.remove('hidden');
             
             startTimer();
-            isPlaying = true;
         }
 
         function swapItemsInArray(arr, i, j) {
@@ -404,7 +406,7 @@
                 li.setAttribute('data-index', index);
                 li.innerHTML = `<span class="emoji">${item.icon}</span><span>${item.name}</span>`;
                 
-                if (enableDrag) {
+                if (enableDrag && isPlaying) {
                     li.setAttribute('draggable', 'true');
                     li.addEventListener('dragstart', dragStart);
                     li.addEventListener('dragover', dragOver);
@@ -426,23 +428,28 @@
         let dragStartIndex;
 
         function dragStart() {
+            if(!isPlaying) return;
             dragStartIndex = +this.getAttribute('data-index');
             this.classList.add('dragging');
         }
         function dragOver(e) { e.preventDefault(); }
-        function dragEnter() { this.style.backgroundColor = '#ffe0b2'; }
-        function dragLeave() { this.style.backgroundColor = '#fff'; }
+        function dragEnter() { if(isPlaying) this.style.backgroundColor = '#ffe0b2'; }
+        function dragLeave() { if(isPlaying) this.style.backgroundColor = '#fff'; }
+        
         function dragDrop() {
+            if(!isPlaying) return;
             const dragEndIndex = +this.getAttribute('data-index');
             swapItemsInArray(currentOrder, dragStartIndex, dragEndIndex);
             this.classList.remove('dragging');
             renderTiles(true);
+            checkCompletion(); // Auto-check on drop
         }
 
         // --- TOUCH EVENTS (Mobile) ---
         let touchDragItem = null;
         
         function touchStart(e) {
+            if(!isPlaying) return;
             touchDragItem = this;
             dragStartIndex = +this.getAttribute('data-index');
             this.classList.add('dragging');
@@ -450,17 +457,15 @@
         }
 
         function touchMove(e) {
+            if(!isPlaying) return;
             e.preventDefault();
-            const touch = e.touches[0];
-            const target = document.elementFromPoint(touch.clientX, touch.clientY);
-            
-            // Visual feedback could go here
         }
 
         function touchEnd(e) {
+            if(!isPlaying) return;
             const touch = e.changedTouches[0];
             const target = document.elementFromPoint(touch.clientX, touch.clientY);
-            const droppedItem = target.closest('.zodiac-item');
+            const droppedItem = target ? target.closest('.zodiac-item') : null;
             
             if (droppedItem && droppedItem !== touchDragItem) {
                 const dragEndIndex = +droppedItem.getAttribute('data-index');
@@ -470,6 +475,7 @@
             if(touchDragItem) touchDragItem.classList.remove('dragging');
             touchDragItem = null;
             renderTiles(true);
+            checkCompletion(); // Auto-check on touch end
         }
 
         // --- TIMER & WIN LOGIC ---
@@ -481,33 +487,34 @@
             }, 100);
         }
 
-        function checkOrder() {
+        function checkCompletion() {
             let isCorrect = true;
-            const listItems = document.querySelectorAll('.zodiac-item');
-
             for (let i = 0; i < currentOrder.length; i++) {
                 if (currentOrder[i].name !== correctOrder[i].name) {
-                    listItems[i].classList.add('wrong');
                     isCorrect = false;
-                } else {
-                    listItems[i].classList.remove('wrong');
-                    listItems[i].classList.add('correct');
+                    break;
                 }
             }
 
             if (isCorrect) {
+                isPlaying = false; // Disable further moves
                 clearInterval(timerInterval);
                 finalTime = parseFloat(timeDisplay.innerText);
+                
+                // Trigger Visual Victory Sequence
+                const listItems = document.querySelectorAll('.zodiac-item');
+                
+                // Ripple animation
+                listItems.forEach((item, index) => {
+                    setTimeout(() => {
+                        item.classList.add('correct');
+                    }, index * 100);
+                });
 
+                // Wait for animation then show results
                 setTimeout(() => {
                     handleWin();
-                }, 800);
-            } else {
-                setTimeout(() => {
-                    listItems.forEach(item => {
-                        item.classList.remove('wrong', 'correct');
-                    });
-                }, 1000);
+                }, (listItems.length * 100) + 1000);
             }
         }
 
