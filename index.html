@@ -144,6 +144,17 @@
             transition: all 0.3s ease;
         }
         
+        /* Drag Avatar for Mobile */
+        .drag-avatar {
+            position: fixed;
+            pointer-events: none;
+            z-index: 9999;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+            transform: scale(1.1);
+            opacity: 0.9;
+            background-color: #fff; /* Ensure bg is opaque */
+        }
+        
         .emoji { font-size: 2.5rem; margin-bottom: 5px; }
 
         /* Start Overlay */
@@ -687,22 +698,59 @@
 
         // --- TOUCH EVENTS (Mobile) ---
         let touchDragItem = null;
+        let dragAvatar = null; // Avatar for visual feedback on mobile
         
         function touchStart(e) {
             if(!isPlaying) return;
             touchDragItem = this;
             dragStartIndex = +this.getAttribute('data-index');
+            
+            // Visual feedback: Original tile fades
             this.classList.add('dragging');
-            e.preventDefault(); 
+            
+            // Create Clone for visual drag (Avatar)
+            const touch = e.touches[0];
+            const rect = this.getBoundingClientRect();
+            
+            dragAvatar = this.cloneNode(true);
+            dragAvatar.classList.remove('dragging'); // Ensure clone is opaque
+            dragAvatar.classList.add('drag-avatar'); // Add specific absolute styles
+            
+            // Center the clone on the finger/touch
+            dragAvatar.style.width = rect.width + 'px';
+            dragAvatar.style.height = rect.height + 'px';
+            dragAvatar.style.left = (touch.clientX - rect.width/2) + 'px';
+            dragAvatar.style.top = (touch.clientY - rect.height/2) + 'px';
+            
+            document.body.appendChild(dragAvatar);
+            
+            e.preventDefault(); // Prevent scrolling
         }
 
         function touchMove(e) {
             if(!isPlaying) return;
             e.preventDefault();
+            
+            // Move avatar if it exists
+            if (dragAvatar) {
+                const touch = e.touches[0];
+                const width = parseFloat(dragAvatar.style.width);
+                const height = parseFloat(dragAvatar.style.height);
+                
+                dragAvatar.style.left = (touch.clientX - width/2) + 'px';
+                dragAvatar.style.top = (touch.clientY - height/2) + 'px';
+            }
         }
 
         function touchEnd(e) {
             if(!isPlaying) return;
+            
+            // Clean up Avatar
+            if (dragAvatar) {
+                dragAvatar.remove();
+                dragAvatar = null;
+            }
+
             const touch = e.changedTouches[0];
             const target = document.elementFromPoint(touch.clientX, touch.clientY);
             const droppedItem = target ? target.closest('.zodiac-item') : null;
