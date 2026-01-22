@@ -701,7 +701,9 @@
         let dragAvatar = null; // Avatar for visual feedback on mobile
         
         function touchStart(e) {
-            if(!isPlaying) return;
+            // Prevent multi-touch or new drags if one is already active
+            if(!isPlaying || touchDragItem || e.touches.length > 1) return;
+            
             touchDragItem = this;
             dragStartIndex = +this.getAttribute('data-index');
             
@@ -744,6 +746,8 @@
 
         function touchEnd(e) {
             if(!isPlaying) return;
+            // Only proceed if a drag was actually in progress
+            if (!touchDragItem) return;
             
             // Clean up Avatar
             if (dragAvatar) {
