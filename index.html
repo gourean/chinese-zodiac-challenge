@@ -27,6 +27,13 @@
             padding: 20px;
             color: var(--cny-dark-text);
             overflow-x: hidden;
+            /* Hide default cursor to use custom one */
+            cursor: none; 
+        }
+
+        /* Ensure standard inputs still work visually */
+        button, input {
+            cursor: none; /* Keep custom cursor even over buttons */
         }
 
         h1 {
@@ -98,7 +105,6 @@
             grid-template-columns: repeat(4, 1fr);
             gap: 12px;
             margin-bottom: 20px;
-            transition: filter 0.5s ease;
         }
 
         /* When blurred (before start) */
@@ -106,6 +112,7 @@
             filter: blur(12px);
             pointer-events: none;
             opacity: 0.8;
+            transition: filter 0.5s ease;
         }
 
         .zodiac-item {
@@ -113,18 +120,19 @@
             border: 2px solid #ffcc80;
             padding: 15px 5px;
             border-radius: 10px;
-            cursor: grab;
+            cursor: none; /* Hide default cursor during drag */
             font-weight: bold;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            transition: transform 0.2s, box-shadow 0.2s, background-color 0.2s;
+            transition: box-shadow 0.2s, background-color 0.2s, transform 0.1s; 
             user-select: none;
             box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            position: relative;
         }
 
-        .zodiac-item:active { cursor: grabbing; transform: scale(1.05); }
+        .zodiac-item:active { z-index: 10; transform: scale(1.05); }
         .zodiac-item.dragging { opacity: 0.4; transform: scale(0.9); }
         
         .zodiac-item.correct { 
@@ -177,7 +185,7 @@
             border-radius: 4px;
         }
 
-        .hand-cursor {
+        .hand-cursor-demo {
             position: absolute;
             top: 50%;
             left: 50%;
@@ -227,7 +235,7 @@
             font-size: 1.1rem;
             font-weight: bold;
             border-radius: 50px;
-            cursor: pointer;
+            cursor: none; /* Keep custom cursor */
             box-shadow: 0 4px 0 #f57f17;
             transition: transform 0.1s, box-shadow 0.1s;
             margin: 5px;
@@ -257,12 +265,36 @@
         tr:nth-child(even) { background-color: #fffde7; }
         tr:nth-child(1) td { color: #d84315; font-weight: bold; } /* 1st place color */
 
+        tr.highlight {
+            background-color: #ffe082 !important;
+            border-left: 5px solid #d84315;
+            animation: highlightPulse 2s infinite;
+        }
+
+        @keyframes highlightPulse {
+            0% { background-color: #ffe082; }
+            50% { background-color: #ffecb3; }
+            100% { background-color: #ffe082; }
+        }
+
+        .your-time-display {
+            background: #e1f5fe;
+            border: 2px solid #0288d1;
+            color: #01579b;
+            padding: 10px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            font-weight: bold;
+            font-size: 1.2rem;
+        }
+
         input[type="text"] {
             padding: 12px; font-size: 1.1rem;
             border: 2px solid var(--cny-gold);
             border-radius: 8px; width: 70%;
             text-align: center;
             outline: none;
+            cursor: text; /* Restore text cursor for input */
         }
         input:focus { border-color: var(--cny-bright-red); }
 
@@ -271,30 +303,64 @@
         /* Music Toggle */
         .music-btn {
             background: none; border: none; box-shadow: none;
-            font-size: 1.5rem; padding: 0; cursor: pointer;
+            font-size: 1.5rem; padding: 0; cursor: none;
             color: #d84315;
         }
         .music-btn:hover { background: none; transform: scale(1.1); }
         .music-btn:active { transform: scale(0.9); }
 
+        /* Custom Cursor Style */
+        #custom-cursor {
+            position: fixed;
+            top: 0; left: 0;
+            width: 40px;
+            height: 40px;
+            pointer-events: none; /* Allows click through */
+            z-index: 10000;
+            font-size: 2.5rem;
+            line-height: 1;
+            text-shadow: 
+                0 0 2px white,
+                0 0 5px white,
+                1px 1px 2px black;
+            transform-origin: center;
+            will-change: transform, top, left;
+            transition: transform 0.1s;
+        }
+        
+        /* Click animation class */
+        .cursor-click {
+            transform: scale(0.8) !important;
+        }
+
         /* Mobile Adjustments */
         @media (max-width: 500px) {
             .zodiac-list { grid-template-columns: repeat(3, 1fr); }
             h1 { font-size: 2rem; }
-            /* Adjust instructions for mobile grid */
             .mini-grid { grid-template-columns: repeat(3, 1fr); width: 140px; }
+            
             @keyframes drag-demo {
                 0% { transform: translate(-50px, 0); }
                 50% { transform: translate(50px, 0); }
                 100% { transform: translate(-50px, 0); }
+            }
+
+            /* Restore default cursor on touch/mobile devices */
+            body, button, .music-btn, .zodiac-item {
+                cursor: auto;
+            }
+            #custom-cursor {
+                display: none; /* Hide custom cursor on mobile */
             }
         }
     </style>
 </head>
 <body>
 
+    <!-- Custom Cursor -->
+    <div id="custom-cursor">👆</div>
+
     <!-- Audio Element (Looping) -->
-    <!-- Note: Placeholder src. Replace with a real URL for full effect. -->
     <audio id="bgm-audio" loop>
         <source src="https://cdn.pixabay.com/download/audio/2022/01/26/audio_d0c6ff1e65.mp3?filename=chinese-new-year-18456.mp3" type="audio/mpeg">
     </audio>
@@ -324,7 +390,7 @@
                     <div class="mini-tile"></div><div class="mini-tile"></div><div class="mini-tile"></div><div class="mini-tile"></div>
                     <div class="mini-tile"></div><div class="mini-tile"></div><div class="mini-tile"></div><div class="mini-tile"></div>
                 </div>
-                <div class="hand-cursor">👆</div>
+                <div class="hand-cursor-demo">👆</div>
             </div>
 
             <button class="primary-btn" onclick="startPreGameCountdown()">Start Game</button>
@@ -335,7 +401,8 @@
 
     <!-- SECTION 2: RESULT -->
     <div id="result-area" class="container">
-        <h2 style="color: var(--cny-bright-red)">🎉 Gong Xi Fa Cai! 🎉</h2>
+        <!-- Changed Header ID to target dynamically -->
+        <h2 id="result-title" style="color: var(--cny-bright-red)">🎉 Gong Xi Fa Cai! 🎉</h2>
         <p>You completed the cycle in <strong id="final-time" style="font-size: 1.5rem; color: #d84315"></strong> seconds.</p>
         
         <div id="high-score-input" class="hidden">
@@ -356,6 +423,7 @@
     <!-- SECTION 3: LEADERBOARD -->
     <div id="leaderboard-area" class="container">
         <h2>🏆 Hall of Fame 🏆</h2>
+        <div id="user-time-banner" class="your-time-display hidden"></div>
         <table id="ranking-table">
             <thead>
                 <tr>
@@ -396,6 +464,7 @@
         let startTime;
         let finalTime = 0;
         let isPlaying = false;
+        let lastScoreId = null; 
         
         // --- DOM ELEMENTS ---
         const gameArea = document.getElementById('game-area');
@@ -407,6 +476,33 @@
         const countdownOverlay = document.getElementById('countdown-overlay');
         const musicBtn = document.getElementById('music-toggle');
         const bgm = document.getElementById('bgm-audio');
+        const userTimeBanner = document.getElementById('user-time-banner');
+        const resultTitle = document.getElementById('result-title');
+        const customCursor = document.getElementById('custom-cursor');
+
+        // --- CUSTOM CURSOR LOGIC ---
+        // Refactored to work during drag events
+        const updateCursor = (e) => {
+            customCursor.style.left = e.clientX + 'px';
+            customCursor.style.top = e.clientY + 'px';
+        };
+
+        // Standard mouse movement
+        document.addEventListener('mousemove', updateCursor);
+        
+        // IMPORTANT: Also update during drag events (when mousemove stops firing)
+        document.addEventListener('dragover', (e) => {
+            // e.preventDefault(); // Optional here, handled in drag targets
+            updateCursor(e);
+        });
+
+        document.addEventListener('mousedown', () => {
+            customCursor.classList.add('cursor-click');
+        });
+
+        document.addEventListener('mouseup', () => {
+            customCursor.classList.remove('cursor-click');
+        });
 
         // --- SOUND & MUSIC ---
         function toggleMusic() {
@@ -429,6 +525,7 @@
             listEl.classList.add('blurred');
             timeDisplay.innerText = "0.0";
             isPlaying = false;
+            lastScoreId = null;
             
             // Create initial array
             currentOrder = [...correctOrder];
@@ -445,18 +542,16 @@
                 const idx1 = Math.floor(Math.random() * 12);
                 const idx2 = Math.floor(Math.random() * 12);
                 swapItemsInArray(currentOrder, idx1, idx2);
-                renderTiles(false); // Render without re-attaching listeners for performance
+                renderTiles(false); 
             }, 600);
         }
 
         // --- COUNTDOWN & START LOGIC ---
         function startPreGameCountdown() {
-            // 1. Try to auto-start music if not playing
             if(bgm.paused) {
                 bgm.play().then(() => musicBtn.innerText = "🔊").catch(() => {});
             }
 
-            // 2. Hide Start Overlay, Show Countdown
             startOverlay.style.display = 'none';
             countdownOverlay.classList.remove('hidden');
             
@@ -478,16 +573,15 @@
         }
 
         function realStartGame() {
-            clearInterval(shuffleInterval); // Stop visual shuffling
+            clearInterval(shuffleInterval); 
             
-            // Do a real rigorous shuffle
             for (let i = currentOrder.length - 1; i > 0; i--) {
                 const j = Math.floor(Math.random() * (i + 1));
                 swapItemsInArray(currentOrder, i, j);
             }
             
             isPlaying = true;
-            renderTiles(true); // Render with drag listeners
+            renderTiles(true); 
             
             listEl.classList.remove('blurred');
             
@@ -525,6 +619,47 @@
             });
         }
 
+        // --- FLIP ANIMATION HELPER ---
+        function getTilePositions() {
+            const positions = {};
+            const items = document.querySelectorAll('.zodiac-item');
+            items.forEach(item => {
+                const name = item.querySelector('span:last-child').innerText; 
+                const rect = item.getBoundingClientRect();
+                positions[name] = { left: rect.left, top: rect.top };
+            });
+            return positions;
+        }
+
+        function animateGridChange(changeFn) {
+            const oldPos = getTilePositions();
+            changeFn();
+            const newItems = document.querySelectorAll('.zodiac-item');
+            newItems.forEach(item => {
+                const name = item.querySelector('span:last-child').innerText;
+                const old = oldPos[name];
+                
+                if (old) {
+                    const rect = item.getBoundingClientRect();
+                    const dx = old.left - rect.left;
+                    const dy = old.top - rect.top;
+                    
+                    if (dx !== 0 || dy !== 0) {
+                        item.style.transition = 'none';
+                        item.style.transform = `translate(${dx}px, ${dy}px)`;
+                        item.offsetHeight; 
+                        item.style.transition = 'transform 0.3s cubic-bezier(0.2, 0, 0.2, 1)'; 
+                        item.style.transform = '';
+                        setTimeout(() => {
+                            if(item.style.transform === '') {
+                                item.style.transition = ''; 
+                            }
+                        }, 300);
+                    }
+                }
+            });
+        }
+
         // --- DRAG EVENTS ---
         let dragStartIndex;
 
@@ -540,10 +675,14 @@
         function dragDrop() {
             if(!isPlaying) return;
             const dragEndIndex = +this.getAttribute('data-index');
-            swapItemsInArray(currentOrder, dragStartIndex, dragEndIndex);
+            
+            animateGridChange(() => {
+                swapItemsInArray(currentOrder, dragStartIndex, dragEndIndex);
+                renderTiles(true);
+            });
+
             this.classList.remove('dragging');
-            renderTiles(true);
-            checkCompletion(); // Auto-check on drop
+            checkCompletion(); 
         }
 
         // --- TOUCH EVENTS (Mobile) ---
@@ -554,7 +693,7 @@
             touchDragItem = this;
             dragStartIndex = +this.getAttribute('data-index');
             this.classList.add('dragging');
-            e.preventDefault(); // Prevent scrolling while dragging
+            e.preventDefault(); 
         }
 
         function touchMove(e) {
@@ -570,13 +709,17 @@
             
             if (droppedItem && droppedItem !== touchDragItem) {
                 const dragEndIndex = +droppedItem.getAttribute('data-index');
-                swapItemsInArray(currentOrder, dragStartIndex, dragEndIndex);
+                animateGridChange(() => {
+                    swapItemsInArray(currentOrder, dragStartIndex, dragEndIndex);
+                    renderTiles(true);
+                });
+            } else {
+                renderTiles(true);
             }
             
             if(touchDragItem) touchDragItem.classList.remove('dragging');
             touchDragItem = null;
-            renderTiles(true);
-            checkCompletion(); // Auto-check on touch end
+            checkCompletion(); 
         }
 
         // --- TIMER & WIN LOGIC ---
@@ -598,21 +741,18 @@
             }
 
             if (isCorrect) {
-                isPlaying = false; // Disable further moves
+                isPlaying = false; 
                 clearInterval(timerInterval);
                 finalTime = parseFloat(timeDisplay.innerText);
                 
-                // Trigger Visual Victory Sequence
                 const listItems = document.querySelectorAll('.zodiac-item');
                 
-                // Ripple animation
                 listItems.forEach((item, index) => {
                     setTimeout(() => {
                         item.classList.add('correct');
                     }, index * 100);
                 });
 
-                // Wait for animation then show results
                 setTimeout(() => {
                     handleWin();
                 }, (listItems.length * 100) + 1000);
@@ -623,6 +763,16 @@
             gameArea.style.display = 'none';
             resultArea.style.display = 'block';
             document.getElementById('final-time').innerText = finalTime;
+            
+            // Set Dynamic Title based on Time
+            if (finalTime <= 12) {
+                resultTitle.innerText = "⚡ Excellent! ⚡";
+            } else if (finalTime <= 20) {
+                resultTitle.innerText = "👍 Well Done! 👍";
+            } else {
+                resultTitle.innerText = "😊 Not Bad! 😊";
+            }
+
             checkLeaderboardEligibility();
         }
 
@@ -651,18 +801,29 @@
 
         function submitScore() {
             const name = document.getElementById('player-name').value.trim() || "Anonymous";
-            const newEntry = { name: name, time: finalTime };
+            lastScoreId = Date.now(); 
+            const newEntry = { name: name, time: finalTime, id: lastScoreId };
+            
             let scores = getScores();
             scores.push(newEntry);
             scores.sort((a, b) => a.time - b.time);
+            
             if (scores.length > 10) scores = scores.slice(0, 10);
             localStorage.setItem('zodiac_ranking_cny', JSON.stringify(scores));
-            showLeaderboard();
+            
+            showLeaderboard(lastScoreId);
         }
 
-        function showLeaderboard() {
+        function showLeaderboard(highlightId = null) {
             resultArea.style.display = 'none';
             leaderboardArea.style.display = 'block';
+            
+            if (finalTime > 0) {
+                userTimeBanner.innerText = `Your Time: ${finalTime}s`;
+                userTimeBanner.classList.remove('hidden');
+            } else {
+                userTimeBanner.classList.add('hidden');
+            }
             
             const scores = getScores();
             const tbody = document.querySelector('#ranking-table tbody');
@@ -670,6 +831,11 @@
 
             scores.forEach((entry, index) => {
                 const tr = document.createElement('tr');
+                
+                if (highlightId && entry.id === highlightId) {
+                    tr.classList.add('highlight');
+                }
+
                 let medal = "";
                 if(index === 0) medal = "🥇 ";
                 if(index === 1) medal = "🥈 ";
