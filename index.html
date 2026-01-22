@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chinese Zodiac Challenge (CNY Edition)</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&family=Noto+Sans+SC:wght@400;700&display=swap');
+
+        :root {
+            --cny-red: #8b0000;
+            --cny-bright-red: #d32f2f;
+            --cny-gold: #ffd700;
+            --cny-bg: #fff8e1; /* Parchment color */
+            --cny-dark-text: #3e2723;
+        }
+
+        body {
+            font-family: 'Noto Sans SC', 'Segoe UI', sans-serif;
+            background-color: var(--cny-red);
+            background-image: radial-gradient(circle at 50% 50%, #a50000 10%, #600000 90%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            color: var(--cny-dark-text);
+            overflow-x: hidden;
+        }
+
+        h1 {
+            font-family: 'Ma Shan Zheng', cursive;
+            color: var(--cny-gold);
+            font-size: 3rem;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+            margin-bottom: 10px;
+            margin-top: 10px;
+        }
+
+        .container {
+            background-color: var(--cny-bg);
+            padding: 30px;
+            border-radius: 15px;
+            border: 4px solid var(--cny-gold);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            text-align: center;
+            max-width: 650px;
+            width: 100%;
+            position: relative;
+        }
+
+        /* Decoration Borders */
+        .container::before {
+            content: "☁️";
+            position: absolute;
+            top: 10px; left: 10px;
+            font-size: 24px;
+            opacity: 0.5;
+        }
+        .container::after {
+            content: "☁️";
+            position: absolute;
+            top: 10px; right: 10px;
+            font-size: 24px;
+            opacity: 0.5;
+            transform: scaleX(-1);
+        }
+
+        /* Areas */
+        #game-area { position: relative; }
+        #result-area, #leaderboard-area { display: none; }
+
+        /* Timer & Controls */
+        .controls-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            background: #ffe0b2;
+            padding: 10px 20px;
+            border-radius: 30px;
+            border: 1px solid var(--cny-gold);
+        }
+
+        .timer {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #d84315;
+            font-variant-numeric: tabular-nums;
+        }
+
+        /* Zodiac Grid */
+        .zodiac-list {
+            list-style: none;
+            padding: 0;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+            margin-bottom: 20px;
+            transition: filter 0.5s ease;
+        }
+
+        /* When blurred (before start) */
+        .zodiac-list.blurred {
+            filter: blur(12px);
+            pointer-events: none;
+            opacity: 0.8;
+        }
+
+        .zodiac-item {
+            background-color: #fff;
+            border: 2px solid #ffcc80;
+            padding: 15px 5px;
+            border-radius: 10px;
+            cursor: grab;
+            font-weight: bold;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.2s, box-shadow 0.2s, background-color 0.2s;
+            user-select: none;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        .zodiac-item:active { cursor: grabbing; transform: scale(1.05); }
+        .zodiac-item.dragging { opacity: 0.4; transform: scale(0.9); }
+        
+        .zodiac-item.correct { background-color: #c8e6c9; border-color: #2e7d32; box-shadow: 0 0 10px #2e7d32; }
+        .zodiac-item.wrong { background-color: #ffcdd2; border-color: #c62828; animation: shake 0.5s; }
+        
+        .emoji { font-size: 2.5rem; margin-bottom: 5px; }
+
+        /* Start Overlay */
+        #start-overlay {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(139, 0, 0, 0.4);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            border-radius: 10px;
+            z-index: 10;
+        }
+
+        /* Buttons */
+        button {
+            background: linear-gradient(to bottom, #ffeb3b, #fbc02d);
+            color: #b71c1c;
+            border: 2px solid #f57f17;
+            padding: 12px 25px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            border-radius: 50px;
+            cursor: pointer;
+            box-shadow: 0 4px 0 #f57f17;
+            transition: transform 0.1s, box-shadow 0.1s;
+            margin: 5px;
+            font-family: 'Noto Sans SC', sans-serif;
+        }
+
+        button:active {
+            transform: translateY(4px);
+            box-shadow: none;
+        }
+
+        button.primary-btn {
+            font-size: 1.5rem;
+            padding: 15px 40px;
+            background: linear-gradient(to bottom, #d32f2f, #b71c1c);
+            color: white;
+            border-color: #7f0000;
+            box-shadow: 0 5px 0 #7f0000;
+        }
+        
+        button.secondary { background: #eee; color: #333; border-color: #ccc; box-shadow: 0 4px 0 #bbb; }
+
+        /* Animations */
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+
+        /* Leaderboard */
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        th, td { padding: 12px; border-bottom: 1px solid #ffd54f; text-align: left; }
+        th { background-color: #fff3e0; color: #e65100; }
+        tr:nth-child(even) { background-color: #fffde7; }
+        tr:nth-child(1) td { color: #d84315; font-weight: bold; } /* 1st place color */
+
+        input[type="text"] {
+            padding: 12px; font-size: 1.1rem;
+            border: 2px solid var(--cny-gold);
+            border-radius: 8px; width: 70%;
+            text-align: center;
+            outline: none;
+        }
+        input:focus { border-color: var(--cny-bright-red); }
+
+        .hidden { display: none !important; }
+
+        /* Music Toggle */
+        .music-btn {
+            background: none; border: none; box-shadow: none;
+            font-size: 1.5rem; padding: 0; cursor: pointer;
+            color: #d84315;
+        }
+        .music-btn:hover { background: none; transform: scale(1.1); }
+        .music-btn:active { transform: scale(0.9); }
+
+        /* Mobile Adjustments */
+        @media (max-width: 500px) {
+            .zodiac-list { grid-template-columns: repeat(3, 1fr); }
+            h1 { font-size: 2rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Audio Element (Looping) -->
+    <!-- Note: Placeholder src. Replace with a real URL for full effect. -->
+    <audio id="bgm-audio" loop>
+        <source src="https://cdn.pixabay.com/download/audio/2022/01/26/audio_d0c6ff1e65.mp3?filename=chinese-new-year-18456.mp3" type="audio/mpeg">
+    </audio>
+
+    <h1>🧨 Chinese Zodiac 🧨</h1>
+
+    <!-- SECTION 1: GAME -->
+    <div id="game-area" class="container">
+        
+        <div class="controls-bar">
+            <button class="music-btn" id="music-toggle" onclick="toggleMusic()" title="Toggle Music">🔇</button>
+            <div class="timer">⏱️ <span id="time-display">0.0</span>s</div>
+        </div>
+
+        <ul class="zodiac-list blurred" id="zodiac-list">
+            <!-- Tiles generated by JS -->
+        </ul>
+
+        <div id="start-overlay">
+            <div style="color: white; font-size: 1.2rem; margin-bottom: 20px; text-shadow: 1px 1px 2px black;">
+                Arrange the animals in order!
+            </div>
+            <button class="primary-btn" onclick="startGame()">Start Game</button>
+        </div>
+
+        <button onclick="checkOrder()" id="check-btn" class="hidden" style="margin-top: 20px;">Check Order</button>
+    </div>
+
+    <!-- SECTION 2: RESULT -->
+    <div id="result-area" class="container">
+        <h2 style="color: var(--cny-bright-red)">🎉 Gong Xi Fa Cai! 🎉</h2>
+        <p>You completed the cycle in <strong id="final-time" style="font-size: 1.5rem; color: #d84315"></strong> seconds.</p>
+        
+        <div id="high-score-input" class="hidden">
+            <p style="color: #2e7d32; font-weight: bold;">🏅 New High Score! 🏅</p>
+            <input type="text" id="player-name" placeholder="Enter your name" maxlength="15">
+            <br><br>
+            <button onclick="submitScore()">Submit to Leaderboard</button>
+        </div>
+
+        <div id="no-high-score" class="hidden">
+            <button onclick="showLeaderboard()">View Leaderboard</button>
+        </div>
+        
+        <br>
+        <button class="secondary" onclick="restartGame()">Play Again</button>
+    </div>
+
+    <!-- SECTION 3: LEADERBOARD -->
+    <div id="leaderboard-area" class="container">
+        <h2>🏆 Hall of Fame 🏆</h2>
+        <table id="ranking-table">
+            <thead>
+                <tr>
+                    <th>Rank</th>
+                    <th>Name</th>
+                    <th>Time (s)</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Rows generated by JS -->
+            </tbody>
+        </table>
+        <br>
+        <button onclick="restartGame()">Play Again</button>
+        <button class="secondary" onclick="resetRankings()">Clear Data</button>
+    </div>
+
+    <script>
+        // --- DATA ---
+        const correctOrder = [
+            { name: "Rat", icon: "🐀" },
+            { name: "Ox", icon: "🐂" },
+            { name: "Tiger", icon: "🐅" },
+            { name: "Rabbit", icon: "🐇" },
+            { name: "Dragon", icon: "🐉" },
+            { name: "Snake", icon: "🐍" },
+            { name: "Horse", icon: "🐎" },
+            { name: "Goat", icon: "🐐" },
+            { name: "Monkey", icon: "🐒" },
+            { name: "Rooster", icon: "🐓" },
+            { name: "Dog", icon: "🐕" },
+            { name: "Pig", icon: "🐖" }
+        ];
+
+        let currentOrder = [];
+        let timerInterval;
+        let shuffleInterval;
+        let startTime;
+        let finalTime = 0;
+        let isPlaying = false;
+        
+        // --- DOM ELEMENTS ---
+        const gameArea = document.getElementById('game-area');
+        const resultArea = document.getElementById('result-area');
+        const leaderboardArea = document.getElementById('leaderboard-area');
+        const listEl = document.getElementById('zodiac-list');
+        const timeDisplay = document.getElementById('time-display');
+        const startOverlay = document.getElementById('start-overlay');
+        const checkBtn = document.getElementById('check-btn');
+        const musicBtn = document.getElementById('music-toggle');
+        const bgm = document.getElementById('bgm-audio');
+
+        // --- SOUND EFFECTS ---
+        // Removed AudioContext logic as requested, keeping only BGM control
+
+        function toggleMusic() {
+            if (bgm.paused) {
+                bgm.play().catch(e => console.log("Interaction required first"));
+                musicBtn.innerText = "🔊";
+            } else {
+                bgm.pause();
+                musicBtn.innerText = "🔇";
+            }
+        }
+
+        // --- INITIALIZATION ---
+        function initGame() {
+            gameArea.style.display = 'block';
+            resultArea.style.display = 'none';
+            leaderboardArea.style.display = 'none';
+            checkBtn.classList.add('hidden');
+            startOverlay.style.display = 'flex';
+            listEl.classList.add('blurred');
+            timeDisplay.innerText = "0.0";
+            
+            // Create initial array
+            currentOrder = [...correctOrder];
+            renderTiles();
+            
+            // Start background shuffling animation
+            startShuffleAnimation();
+        }
+
+        function startShuffleAnimation() {
+            clearInterval(shuffleInterval);
+            shuffleInterval = setInterval(() => {
+                // Visually swap two random items
+                const idx1 = Math.floor(Math.random() * 12);
+                const idx2 = Math.floor(Math.random() * 12);
+                swapItemsInArray(currentOrder, idx1, idx2);
+                renderTiles(false); // Render without re-attaching listeners for performance
+            }, 600);
+        }
+
+        function startGame() {
+            // Try to auto-start music if not playing
+            if(bgm.paused) {
+                bgm.play().then(() => musicBtn.innerText = "🔊").catch(() => {});
+            }
+
+            clearInterval(shuffleInterval); // Stop visual shuffling
+            
+            // Do a real rigorous shuffle
+            for (let i = currentOrder.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                swapItemsInArray(currentOrder, i, j);
+            }
+            
+            renderTiles(true); // Render with drag listeners
+            
+            listEl.classList.remove('blurred');
+            startOverlay.style.display = 'none';
+            checkBtn.classList.remove('hidden');
+            
+            startTimer();
+            isPlaying = true;
+        }
+
+        function swapItemsInArray(arr, i, j) {
+            [arr[i], arr[j]] = [arr[j], arr[i]];
+        }
+
+        // --- RENDER & DRAG DROP ---
+        function renderTiles(enableDrag = false) {
+            listEl.innerHTML = '';
+            currentOrder.forEach((item, index) => {
+                const li = document.createElement('li');
+                li.className = 'zodiac-item';
+                li.setAttribute('data-index', index);
+                li.innerHTML = `<span class="emoji">${item.icon}</span><span>${item.name}</span>`;
+                
+                if (enableDrag) {
+                    li.setAttribute('draggable', 'true');
+                    li.addEventListener('dragstart', dragStart);
+                    li.addEventListener('dragover', dragOver);
+                    li.addEventListener('drop', dragDrop);
+                    li.addEventListener('dragenter', dragEnter);
+                    li.addEventListener('dragleave', dragLeave);
+                    
+                    // Touch support for mobile
+                    li.addEventListener('touchstart', touchStart, {passive: false});
+                    li.addEventListener('touchmove', touchMove, {passive: false});
+                    li.addEventListener('touchend', touchEnd);
+                }
+                
+                listEl.appendChild(li);
+            });
+        }
+
+        // --- DRAG EVENTS ---
+        let dragStartIndex;
+
+        function dragStart() {
+            dragStartIndex = +this.getAttribute('data-index');
+            this.classList.add('dragging');
+        }
+        function dragOver(e) { e.preventDefault(); }
+        function dragEnter() { this.style.backgroundColor = '#ffe0b2'; }
+        function dragLeave() { this.style.backgroundColor = '#fff'; }
+        function dragDrop() {
+            const dragEndIndex = +this.getAttribute('data-index');
+            swapItemsInArray(currentOrder, dragStartIndex, dragEndIndex);
+            this.classList.remove('dragging');
+            renderTiles(true);
+        }
+
+        // --- TOUCH EVENTS (Mobile) ---
+        let touchDragItem = null;
+        
+        function touchStart(e) {
+            touchDragItem = this;
+            dragStartIndex = +this.getAttribute('data-index');
+            this.classList.add('dragging');
+            e.preventDefault(); // Prevent scrolling while dragging
+        }
+
+        function touchMove(e) {
+            e.preventDefault();
+            const touch = e.touches[0];
+            const target = document.elementFromPoint(touch.clientX, touch.clientY);
+            
+            // Visual feedback could go here
+        }
+
+        function touchEnd(e) {
+            const touch = e.changedTouches[0];
+            const target = document.elementFromPoint(touch.clientX, touch.clientY);
+            const droppedItem = target.closest('.zodiac-item');
+            
+            if (droppedItem && droppedItem !== touchDragItem) {
+                const dragEndIndex = +droppedItem.getAttribute('data-index');
+                swapItemsInArray(currentOrder, dragStartIndex, dragEndIndex);
+            }
+            
+            if(touchDragItem) touchDragItem.classList.remove('dragging');
+            touchDragItem = null;
+            renderTiles(true);
+        }
+
+        // --- TIMER & WIN LOGIC ---
+        function startTimer() {
+            startTime = Date.now();
+            timerInterval = setInterval(() => {
+                const elapsed = Date.now() - startTime;
+                timeDisplay.innerText = (elapsed / 1000).toFixed(1);
+            }, 100);
+        }
+
+        function checkOrder() {
+            let isCorrect = true;
+            const listItems = document.querySelectorAll('.zodiac-item');
+
+            for (let i = 0; i < currentOrder.length; i++) {
+                if (currentOrder[i].name !== correctOrder[i].name) {
+                    listItems[i].classList.add('wrong');
+                    isCorrect = false;
+                } else {
+                    listItems[i].classList.remove('wrong');
+                    listItems[i].classList.add('correct');
+                }
+            }
+
+            if (isCorrect) {
+                clearInterval(timerInterval);
+                finalTime = parseFloat(timeDisplay.innerText);
+
+                setTimeout(() => {
+                    handleWin();
+                }, 800);
+            } else {
+                setTimeout(() => {
+                    listItems.forEach(item => {
+                        item.classList.remove('wrong', 'correct');
+                    });
+                }, 1000);
+            }
+        }
+
+        function handleWin() {
+            gameArea.style.display = 'none';
+            resultArea.style.display = 'block';
+            document.getElementById('final-time').innerText = finalTime;
+            checkLeaderboardEligibility();
+        }
+
+        function restartGame() {
+            initGame();
+        }
+
+        // --- LEADERBOARD ---
+        function getScores() {
+            const scores = localStorage.getItem('zodiac_ranking_cny');
+            return scores ? JSON.parse(scores) : [];
+        }
+
+        function checkLeaderboardEligibility() {
+            const scores = getScores();
+            if (scores.length < 10 || finalTime < scores[9].time) {
+                document.getElementById('high-score-input').classList.remove('hidden');
+                document.getElementById('no-high-score').classList.add('hidden');
+                document.getElementById('player-name').value = '';
+                document.getElementById('player-name').focus();
+            } else {
+                document.getElementById('high-score-input').classList.add('hidden');
+                document.getElementById('no-high-score').classList.remove('hidden');
+            }
+        }
+
+        function submitScore() {
+            const name = document.getElementById('player-name').value.trim() || "Anonymous";
+            const newEntry = { name: name, time: finalTime };
+            let scores = getScores();
+            scores.push(newEntry);
+            scores.sort((a, b) => a.time - b.time);
+            if (scores.length > 10) scores = scores.slice(0, 10);
+            localStorage.setItem('zodiac_ranking_cny', JSON.stringify(scores));
+            showLeaderboard();
+        }
+
+        function showLeaderboard() {
+            resultArea.style.display = 'none';
+            leaderboardArea.style.display = 'block';
+            
+            const scores = getScores();
+            const tbody = document.querySelector('#ranking-table tbody');
+            tbody.innerHTML = '';
+
+            scores.forEach((entry, index) => {
+                const tr = document.createElement('tr');
+                let medal = "";
+                if(index === 0) medal = "🥇 ";
+                if(index === 1) medal = "🥈 ";
+                if(index === 2) medal = "🥉 ";
+
+                tr.innerHTML = `
+                    <td>${medal}${index + 1}</td>
+                    <td>${entry.name}</td>
+                    <td>${entry.time}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            if(scores.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="3" style="text-align:center">No records yet.</td></tr>';
+            }
+        }
+
+        function resetRankings() {
+            if(confirm("Clear leaderboard?")) {
+                localStorage.removeItem('zodiac_ranking_cny');
+                showLeaderboard();
+            }
+        }
+
+        // Start
+        initGame();
+    </script>
+</body>
+</html>
