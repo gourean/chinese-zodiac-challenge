@@ -1,8 +1,10 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Chinese Zodiac Challenge (CNY Edition)</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&family=Noto+Sans+SC:wght@400;700&display=swap');
@@ -11,7 +13,8 @@
             --cny-red: #8b0000;
             --cny-bright-red: #d32f2f;
             --cny-gold: #ffd700;
-            --cny-bg: #fff8e1; /* Parchment color */
+            --cny-bg: #fff8e1;
+            /* Parchment color */
             --cny-dark-text: #3e2723;
         }
 
@@ -22,30 +25,37 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: center; /* Center vertically */
-            height: 100vh; 
-            height: 100dvh; /* Use dynamic viewport height for mobile browsers */
+            justify-content: center;
+            /* Center vertically */
+            height: 100vh;
+            height: 100dvh;
+            /* Use dynamic viewport height for mobile browsers */
             margin: 0;
-            padding: 0;
+            padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
             color: var(--cny-dark-text);
-            overflow: hidden; /* Prevent page scroll */
+            overflow: hidden;
+            /* Prevent page scroll */
             /* Hide default cursor to use custom one */
-            cursor: none; 
+            cursor: auto;
+            /* Default to auto, toggle will set to none */
             box-sizing: border-box;
         }
 
         /* Ensure standard inputs still work visually */
-        button, input {
-            cursor: none; /* Keep custom cursor even over buttons */
+        button,
+        input {
+            cursor: pointer;
+            /* Keep custom cursor even over buttons */
         }
 
         h1 {
             /* Changed to match body font as requested */
-            font-family: 'Noto Sans SC', sans-serif; 
+            font-family: 'Noto Sans SC', sans-serif;
             color: var(--cny-gold);
-            font-size: clamp(1.8rem, 4vh, 2.5rem); /* Adjusted size for longer title */
+            font-size: clamp(1.8rem, 4vh, 2.5rem);
+            /* Adjusted size for longer title */
             font-weight: bold;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
             margin: 1vh 0;
             flex-shrink: 0;
             text-transform: uppercase;
@@ -55,14 +65,15 @@
         .container {
             background-color: var(--cny-bg);
             /* Add safe area padding to bottom to prevent blockage by OS bars */
-            padding: 2vh 3vw calc(2vh + env(safe-area-inset-bottom)) 3vw;
+            padding: 2vh 3vw;
             border-radius: 15px;
             border: 4px solid var(--cny-gold);
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
             text-align: center;
             width: 90%;
             max-width: 650px;
-            max-height: 85dvh; /* Ensure it fits within screen using dynamic height */
+            max-height: 85dvh;
+            /* Ensure it fits within screen using dynamic height */
             display: flex;
             flex-direction: column;
             position: relative;
@@ -73,22 +84,25 @@
         .container::before {
             content: "☁️";
             position: absolute;
-            top: 5px; left: 10px;
+            top: 5px;
+            left: 10px;
             font-size: 24px;
             opacity: 0.5;
         }
+
         .container::after {
             content: "☁️";
             position: absolute;
-            top: 5px; right: 10px;
+            top: 5px;
+            right: 10px;
             font-size: 24px;
             opacity: 0.5;
             transform: scaleX(-1);
         }
 
         /* Areas - Force flex to manage internal scrolling/layout */
-        #game-area[style*="block"], 
-        #result-area[style*="block"], 
+        #game-area[style*="block"],
+        #result-area[style*="block"],
         #leaderboard-area[style*="block"] {
             display: flex !important;
             flex-direction: column;
@@ -96,14 +110,18 @@
             overflow: hidden;
         }
 
-        #game-area, #result-area, #leaderboard-area {
-            display: none; /* Hidden by default */
+        #game-area,
+        #result-area,
+        #leaderboard-area {
+            display: none;
+            /* Hidden by default */
         }
 
         /* Timer & Controls - Grid layout for centering */
         .controls-bar {
             display: grid;
-            grid-template-columns: 1fr auto 1fr; /* Left, Center, Right columns */
+            grid-template-columns: 1fr auto 1fr;
+            /* Left, Center, Right columns */
             align-items: center;
             margin-bottom: 1.5vh;
             background: #ffe0b2;
@@ -111,6 +129,7 @@
             border-radius: 30px;
             border: 1px solid var(--cny-gold);
             flex-shrink: 0;
+            position: relative;
         }
 
         .timer {
@@ -118,23 +137,28 @@
             font-weight: bold;
             color: #d84315;
             font-variant-numeric: tabular-nums;
-            justify-self: center; /* Center in grid cell */
+            justify-self: center;
+            /* Center in grid cell */
         }
 
         /* Zodiac Grid */
         .zodiac-list {
             list-style: none;
-            padding: 10px; /* Added padding to prevent clipped shadows/scaling */
+            padding: 10px;
+            /* Added padding to prevent clipped shadows/scaling */
             margin: 0 0 1.5vh 0;
             display: grid;
             grid-template-columns: repeat(4, 1fr);
             gap: clamp(5px, 1.5vh, 12px);
-            
+
             /* Allow grid to take available space */
             flex: 1;
-            align-content: center; /* Center tiles vertically if space allows */
-            min-height: 0; /* Important for nested flex scroll */
-            overflow-y: auto; /* Scroll ONLY if absolutely necessary on tiny screens */
+            align-content: center;
+            /* Center tiles vertically if space allows */
+            min-height: 0;
+            /* Important for nested flex scroll */
+            overflow-y: auto;
+            /* Scroll ONLY if absolutely necessary on tiny screens */
             scrollbar-width: none;
         }
 
@@ -151,21 +175,29 @@
             border: 2px solid #ffcc80;
             padding: clamp(5px, 1.5vh, 15px) 5px;
             border-radius: 10px;
-            cursor: none; 
+            cursor: default;
+            /* Default assumption */
             font-weight: bold;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            transition: box-shadow 0.2s, background-color 0.2s, transform 0.1s; 
+            transition: box-shadow 0.2s, background-color 0.2s, transform 0.1s;
             user-select: none;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
             position: relative;
         }
 
-        .zodiac-item:active { z-index: 10; transform: scale(1.05); }
-        .zodiac-item.dragging { opacity: 0.4; transform: scale(0.9); }
-        
+        .zodiac-item:active {
+            z-index: 10;
+            transform: scale(1.05);
+        }
+
+        .zodiac-item.dragging {
+            opacity: 0.4;
+            transform: scale(0.9);
+        }
+
         /* Selected State for Tap Mode */
         .zodiac-item.selected {
             border-color: #d84315;
@@ -177,41 +209,54 @@
         }
 
         @keyframes pulse-select {
-            0% { box-shadow: 0 0 10px #d84315; }
-            50% { box-shadow: 0 0 20px #ff6f00; }
-            100% { box-shadow: 0 0 10px #d84315; }
+            0% {
+                box-shadow: 0 0 10px #d84315;
+            }
+
+            50% {
+                box-shadow: 0 0 20px #ff6f00;
+            }
+
+            100% {
+                box-shadow: 0 0 10px #d84315;
+            }
         }
 
-        .zodiac-item.correct { 
-            background-color: #c8e6c9; 
-            border-color: #2e7d32; 
-            box-shadow: 0 0 15px #2e7d32; 
+        .zodiac-item.correct {
+            background-color: #c8e6c9;
+            border-color: #2e7d32;
+            box-shadow: 0 0 15px #2e7d32;
             color: #1b5e20;
             transform: scale(1.05);
             transition: all 0.3s ease;
         }
-        
+
         /* Drag Avatar for Mobile */
         .drag-avatar {
             position: fixed;
             pointer-events: none;
             z-index: 9999;
-            box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
             transform: scale(1.1);
             opacity: 0.9;
-            background-color: #fff; /* Ensure bg is opaque */
+            background-color: #fff;
+            /* Ensure bg is opaque */
         }
-        
-        .emoji { 
-            font-size: clamp(1.8rem, 4vh, 2.5rem); 
-            margin-bottom: 5px; 
+
+        .emoji {
+            font-size: clamp(1.8rem, 4vh, 2.5rem);
+            margin-bottom: 5px;
         }
 
         /* Start Overlay */
         #start-overlay {
             position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(139, 0, 0, 0.9); /* Slightly darker for better contrast */
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(139, 0, 0, 0.9);
+            /* Slightly darker for better contrast */
             backdrop-filter: blur(5px);
             display: flex;
             flex-direction: column;
@@ -221,6 +266,80 @@
             z-index: 10;
             padding: 20px;
             box-sizing: border-box;
+        }
+
+        /* Settings Modal */
+        #settings-modal {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(62, 39, 35, 0.95);
+            z-index: 30;
+            display: flex;
+            /* Flex by default, toggled via style.display */
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            border-radius: 10px;
+            color: #fff;
+        }
+
+        .settings-content {
+            background: #fff8e1;
+            padding: 20px;
+            border-radius: 15px;
+            border: 4px solid var(--cny-gold);
+            width: 80%;
+            max-width: 350px;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            color: var(--cny-dark-text);
+        }
+
+        .settings-row {
+            margin: 15px 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .settings-label {
+            font-weight: bold;
+            margin-bottom: 5px;
+            color: #d84315;
+            font-size: 1.1rem;
+        }
+
+        input[type=range] {
+            width: 100%;
+            height: 10px;
+            border-radius: 5px;
+            background: #ddd;
+            outline: none;
+            appearance: none;
+            -webkit-appearance: none;
+        }
+
+        input[type=range]::-webkit-slider-thumb {
+            appearance: none;
+            -webkit-appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: var(--cny-bright-red);
+            cursor: pointer;
+            border: 2px solid var(--cny-gold);
+        }
+
+        .close-btn {
+            margin-top: 15px;
+            background: #795548;
+            border-color: #5d4037;
+            color: white;
+            padding: 8px 20px;
+            font-size: 1rem;
         }
 
         /* Graphical Instructions & Mode Selection */
@@ -256,13 +375,13 @@
             font-size: 0.9rem;
             margin: 0;
         }
-        
+
         .mode-btn.active {
             background: var(--cny-bright-red);
             color: white;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
         }
-        
+
         .mini-grid {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
@@ -270,7 +389,7 @@
             width: 180px;
             margin-bottom: 10px;
         }
-        
+
         .mini-tile {
             width: 100%;
             aspect-ratio: 1;
@@ -278,9 +397,13 @@
             border: 1px solid #ffcc80;
             border-radius: 4px;
         }
-        
+
         /* Highlight specific tiles for demos */
-        .mini-tile.highlight-a { background: #ffe0b2; border-color: #d84315; }
+        .mini-tile.highlight-a {
+            background: #ffe0b2;
+            border-color: #d84315;
+        }
+
         /* highlight-b removed as requested */
 
         .hand-cursor-demo {
@@ -289,7 +412,7 @@
             left: 50%;
             font-size: 2.5rem;
             pointer-events: none;
-            text-shadow: 2px 2px 0px rgba(255,255,255,0.8);
+            text-shadow: 2px 2px 0px rgba(255, 255, 255, 0.8);
             /* Animation set via JS class */
         }
 
@@ -297,30 +420,66 @@
         .hand-cursor-demo.anim-drag {
             animation: drag-demo 2s infinite ease-in-out;
         }
+
         @keyframes drag-demo {
-            0% { transform: translate(-80px, 0); }
-            50% { transform: translate(50px, 0); }
-            100% { transform: translate(-80px, 0); }
+            0% {
+                transform: translate(-80px, 0);
+            }
+
+            50% {
+                transform: translate(50px, 0);
+            }
+
+            100% {
+                transform: translate(-80px, 0);
+            }
         }
 
         /* Animation: Tap */
         .hand-cursor-demo.anim-tap {
             animation: tap-demo 2.5s infinite ease-in-out;
         }
+
         @keyframes tap-demo {
-            0% { transform: translate(-80px, 0) scale(1); }
-            15% { transform: translate(-80px, 0) scale(0.8); } /* Tap 1 */
-            30% { transform: translate(-80px, 0) scale(1); }
-            60% { transform: translate(50px, 20px) scale(1); } /* Move to 2 */
-            75% { transform: translate(50px, 20px) scale(0.8); } /* Tap 2 */
-            90% { transform: translate(50px, 20px) scale(1); }
-            100% { transform: translate(-80px, 0) scale(1); }
+            0% {
+                transform: translate(-80px, 0) scale(1);
+            }
+
+            15% {
+                transform: translate(-80px, 0) scale(0.8);
+            }
+
+            /* Tap 1 */
+            30% {
+                transform: translate(-80px, 0) scale(1);
+            }
+
+            60% {
+                transform: translate(50px, 20px) scale(1);
+            }
+
+            /* Move to 2 */
+            75% {
+                transform: translate(50px, 20px) scale(0.8);
+            }
+
+            /* Tap 2 */
+            90% {
+                transform: translate(50px, 20px) scale(1);
+            }
+
+            100% {
+                transform: translate(-80px, 0) scale(1);
+            }
         }
 
         /* Countdown Overlay */
         #countdown-overlay {
             position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
             background: rgba(139, 0, 0, 0.85);
             display: flex;
             justify-content: center;
@@ -336,9 +495,20 @@
         }
 
         @keyframes pulse {
-            0% { transform: scale(1); opacity: 1; }
-            50% { transform: scale(1.1); opacity: 0.9; }
-            100% { transform: scale(1); opacity: 1; }
+            0% {
+                transform: scale(1);
+                opacity: 1;
+            }
+
+            50% {
+                transform: scale(1.1);
+                opacity: 0.9;
+            }
+
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
         }
 
         /* Buttons */
@@ -350,7 +520,8 @@
             font-size: clamp(1rem, 2.5vh, 1.1rem);
             font-weight: bold;
             border-radius: 50px;
-            cursor: none; /* Keep custom cursor */
+            cursor: pointer;
+            /* Keep custom cursor */
             box-shadow: 0 4px 0 #f57f17;
             transition: transform 0.1s, box-shadow 0.1s;
             margin: 5px;
@@ -371,8 +542,13 @@
             border-color: #7f0000;
             box-shadow: 0 5px 0 #7f0000;
         }
-        
-        button.secondary { background: #eee; color: #333; border-color: #ccc; box-shadow: 0 4px 0 #bbb; }
+
+        button.secondary {
+            background: #eee;
+            color: #333;
+            border-color: #ccc;
+            box-shadow: 0 4px 0 #bbb;
+        }
 
         /* Leaderboard */
         h2 {
@@ -389,21 +565,53 @@
             border-radius: 8px;
             margin-bottom: 10px;
             background: rgba(255, 255, 255, 0.8);
-            
+
             /* Custom Scrollbar styling */
             scrollbar-width: thin;
             scrollbar-color: var(--cny-gold) var(--cny-bg);
         }
 
-        .leaderboard-scroll::-webkit-scrollbar { width: 8px; }
-        .leaderboard-scroll::-webkit-scrollbar-track { background: var(--cny-bg); }
-        .leaderboard-scroll::-webkit-scrollbar-thumb { background-color: var(--cny-gold); border-radius: 4px; }
+        .leaderboard-scroll::-webkit-scrollbar {
+            width: 8px;
+        }
 
-        table { width: 100%; border-collapse: collapse; }
-        th, td { padding: 1.5vh 10px; border-bottom: 1px solid #ffd54f; text-align: left; }
-        th { background-color: #fff3e0; color: #e65100; position: sticky; top: 0; z-index: 1; }
-        tr:nth-child(even) { background-color: #fffde7; }
-        tr:nth-child(1) td { color: #d84315; font-weight: bold; }
+        .leaderboard-scroll::-webkit-scrollbar-track {
+            background: var(--cny-bg);
+        }
+
+        .leaderboard-scroll::-webkit-scrollbar-thumb {
+            background-color: var(--cny-gold);
+            border-radius: 4px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th,
+        td {
+            padding: 1.5vh 10px;
+            border-bottom: 1px solid #ffd54f;
+            text-align: left;
+        }
+
+        th {
+            background-color: #fff3e0;
+            color: #e65100;
+            position: sticky;
+            top: 0;
+            z-index: 1;
+        }
+
+        tr:nth-child(even) {
+            background-color: #fffde7;
+        }
+
+        tr:nth-child(1) td {
+            color: #d84315;
+            font-weight: bold;
+        }
 
         tr.highlight {
             background-color: #ffe082 !important;
@@ -412,9 +620,17 @@
         }
 
         @keyframes highlightPulse {
-            0% { background-color: #ffe082; }
-            50% { background-color: #ffecb3; }
-            100% { background-color: #ffe082; }
+            0% {
+                background-color: #ffe082;
+            }
+
+            50% {
+                background-color: #ffecb3;
+            }
+
+            100% {
+                background-color: #ffe082;
+            }
         }
 
         .your-time-display {
@@ -430,39 +646,71 @@
         }
 
         input[type="text"] {
-            padding: 12px; font-size: 1.1rem;
+            padding: 12px;
+            font-size: 1.1rem;
             border: 2px solid var(--cny-gold);
-            border-radius: 8px; width: 70%;
+            border-radius: 8px;
+            width: 70%;
             text-align: center;
             outline: none;
-            cursor: text; 
+            cursor: text;
             margin-bottom: 10px;
         }
-        input:focus { border-color: var(--cny-bright-red); }
 
-        .hidden { display: none !important; }
+        input:focus {
+            border-color: var(--cny-bright-red);
+        }
+
+        .hidden {
+            display: none !important;
+        }
 
         /* Music Toggle */
-        .music-btn {
-            background: none; border: none; box-shadow: none;
-            font-size: 1.5rem; padding: 0; cursor: none;
+        .settings-icon {
+            background: none;
+            border: none;
+            box-shadow: none;
+            font-size: 1.5rem;
+            padding: 0;
+            cursor: pointer;
             color: #d84315;
-            justify-self: start; /* Align left in grid */
+            justify-self: end;
+            /* Align right in grid if moved */
         }
-        .music-btn:hover { background: none; transform: scale(1.1); }
-        .music-btn:active { transform: scale(0.9); }
+
+        .settings-icon:hover {
+            background: none;
+            transform: scale(1.1);
+        }
+
+        .settings-icon:active {
+            transform: scale(0.9);
+        }
+
+        /* Start Screen Music Button specific positioning */
+        #start-music-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            font-size: 2rem;
+            color: var(--cny-gold);
+            z-index: 20;
+            cursor: none;
+        }
 
         /* Custom Cursor Style */
         #custom-cursor {
             position: fixed;
-            top: 0; left: 0;
+            top: 0;
+            left: 0;
             width: 40px;
             height: 40px;
-            pointer-events: none; /* Allows click through */
+            pointer-events: none;
+            /* Allows click through */
             z-index: 10000;
             font-size: 2.5rem;
             line-height: 1;
-            text-shadow: 
+            text-shadow:
                 0 0 2px white,
                 0 0 5px white,
                 1px 1px 2px black;
@@ -470,72 +718,139 @@
             will-change: transform, top, left;
             transition: transform 0.1s;
         }
-        
+
         .cursor-click {
             transform: scale(0.8) !important;
         }
 
         /* Mobile Adjustments */
         @media (max-width: 500px) {
-            .zodiac-list { grid-template-columns: repeat(3, 1fr); }
-            .mini-grid { grid-template-columns: repeat(3, 1fr); width: 140px; }
-            
-            @keyframes drag-demo {
-                0% { transform: translate(-50px, 0); }
-                50% { transform: translate(50px, 0); }
-                100% { transform: translate(-50px, 0); }
+            .zodiac-list {
+                grid-template-columns: repeat(3, 1fr);
             }
-             @keyframes tap-demo {
-                0% { transform: translate(-50px, 0) scale(1); }
-                15% { transform: translate(-50px, 0) scale(0.8); }
-                30% { transform: translate(-50px, 0) scale(1); }
-                60% { transform: translate(30px, 15px) scale(1); }
-                75% { transform: translate(30px, 15px) scale(0.8); }
-                90% { transform: translate(30px, 15px) scale(1); }
-                100% { transform: translate(-50px, 0) scale(1); }
+
+            .mini-grid {
+                grid-template-columns: repeat(3, 1fr);
+                width: 140px;
+            }
+
+            @keyframes drag-demo {
+                0% {
+                    transform: translate(-50px, 0);
+                }
+
+                50% {
+                    transform: translate(50px, 0);
+                }
+
+                100% {
+                    transform: translate(-50px, 0);
+                }
+            }
+
+            @keyframes tap-demo {
+                0% {
+                    transform: translate(-50px, 0) scale(1);
+                }
+
+                15% {
+                    transform: translate(-50px, 0) scale(0.8);
+                }
+
+                30% {
+                    transform: translate(-50px, 0) scale(1);
+                }
+
+                60% {
+                    transform: translate(30px, 15px) scale(1);
+                }
+
+                75% {
+                    transform: translate(30px, 15px) scale(0.8);
+                }
+
+                90% {
+                    transform: translate(30px, 15px) scale(1);
+                }
+
+                100% {
+                    transform: translate(-50px, 0) scale(1);
+                }
             }
 
             /* Restore default cursor on touch/mobile devices */
-            body, button, .music-btn, .zodiac-item {
+            body,
+            button,
+            .settings-icon,
+            .zodiac-item {
                 cursor: auto;
             }
+
             #custom-cursor {
-                display: none; /* Hide custom cursor on mobile */
+                display: none;
+                /* Hide custom cursor on mobile */
             }
         }
-        
+
         /* Height-based media query for short screens (landscape mobile) */
         @media (max-height: 600px) {
-            .container { padding: 10px 10px calc(10px + env(safe-area-inset-bottom)) 10px; }
-            h1 { font-size: 1.5rem; margin: 5px 0; }
-            .controls-bar { margin-bottom: 5px; padding: 5px 15px; }
-            .emoji { font-size: 1.5rem; margin-bottom: 2px; }
-            .zodiac-item { padding: 5px; }
-            .leaderboard-scroll { margin-bottom: 5px; }
-            th, td { padding: 5px 10px; }
+            .container {
+                padding: 10px;
+            }
+
+            h1 {
+                font-size: 1.5rem;
+                margin: 5px 0;
+            }
+
+            .controls-bar {
+                margin-bottom: 5px;
+                padding: 5px 15px;
+            }
+
+            .emoji {
+                font-size: 1.5rem;
+                margin-bottom: 2px;
+            }
+
+            .zodiac-item {
+                padding: 5px;
+            }
+
+            .leaderboard-scroll {
+                margin-bottom: 5px;
+            }
+
+            th,
+            td {
+                padding: 5px 10px;
+            }
         }
     </style>
 </head>
+
 <body>
 
     <!-- Custom Cursor -->
-    <div id="custom-cursor">👆</div>
+    <div id="custom-cursor" style="display:none;">👆</div>
 
     <!-- Audio Element (Looping) -->
     <audio id="bgm-audio" loop>
-        <source src="https://github.com/gourean/chinese-zodiac-challenge/blob/main/Lanterns%20in%20the%20Schoolyard.mp3" type="audio/mpeg">
+        <source src="https://gourean.github.io/chinese-zodiac-challenge/Lanterns%20in%20the%20Schoolyard.mp3"
+            type="audio/mpeg">
     </audio>
 
     <h1>Chinese Zodiac Challenge</h1>
 
     <!-- SECTION 1: GAME -->
     <div id="game-area" class="container">
-        
+
         <div class="controls-bar">
-            <button class="music-btn" id="music-toggle" onclick="toggleMusic()" title="Toggle Music">🔇</button>
+            <!-- Empty div for grid balance -->
+            <div style="width: 1rem;"></div>
             <div class="timer">⏱️ <span id="time-display">0.0</span>s</div>
-            <!-- Empty div for grid balance if needed, but grid columns handle it -->
-            <div style="width: 1rem;"></div> 
+            <button class="settings-icon" onclick="openSettings()" title="Settings"
+                style="font-size:1.5rem; color: #d84315;">⚙️</button>
         </div>
 
         <ul class="zodiac-list blurred" id="zodiac-list">
@@ -543,9 +858,16 @@
         </ul>
 
         <div id="start-overlay">
+            <!-- Start Screen Music Button Removed -->
+            <button id="settings-btn" class="settings-icon"
+                style="position:absolute; top:20px; right:20px; font-size:2rem; z-index:20; color:var(--cny-gold);"
+                onclick="openSettings()" title="Settings">⚙️</button>
+
             <h2 style="color:white; margin-bottom:5px; text-shadow: 1px 1px 2px black;">Select Gameplay</h2>
-            <p style="color: white; margin-bottom: 15px; margin-top:0; text-shadow: 1px 1px 2px black; font-weight: bold;">Arrange the 12 zodiacs in correct order<br>(starts with Rat 🐀)</p>
-            
+            <p
+                style="color: white; margin-bottom: 15px; margin-top:0; text-shadow: 1px 1px 2px black; font-weight: bold;">
+                Arrange the 12 zodiacs in correct order<br>(starts with Rat 🐀)</p>
+
             <div class="instruction-container">
                 <!-- Mode Switcher -->
                 <div class="mode-switch">
@@ -554,15 +876,58 @@
                 </div>
 
                 <div class="mini-grid">
-                    <div class="mini-tile highlight-a"></div><div class="mini-tile"></div><div class="mini-tile"></div><div class="mini-tile"></div>
-                    <div class="mini-tile"></div><div class="mini-tile"></div><div class="mini-tile"></div><div class="mini-tile"></div>
-                    <div class="mini-tile"></div><div class="mini-tile"></div><div class="mini-tile"></div><div class="mini-tile"></div>
+                    <div class="mini-tile highlight-a"></div>
+                    <div class="mini-tile"></div>
+                    <div class="mini-tile"></div>
+                    <div class="mini-tile"></div>
+                    <div class="mini-tile"></div>
+                    <div class="mini-tile"></div>
+                    <div class="mini-tile"></div>
+                    <div class="mini-tile"></div>
+                    <div class="mini-tile"></div>
+                    <div class="mini-tile"></div>
+                    <div class="mini-tile"></div>
+                    <div class="mini-tile"></div>
                 </div>
                 <!-- The animation class will change based on mode -->
                 <div id="demo-hand" class="hand-cursor-demo anim-drag">👆</div>
             </div>
 
             <button class="primary-btn" onclick="startPreGameCountdown()">Start Game</button>
+        </div>
+
+        <!-- Settings Modal -->
+        <div id="settings-modal" style="display:none;">
+            <div class="settings-content">
+                <h2 style="margin-top:0; color:#bf360c;">⚙️ Settings</h2>
+
+                <div class="settings-row">
+                    <label class="settings-label">Music Volume (BGM)</label>
+                    <input type="range" id="vol-music" min="0" max="1" step="0.1" value="0.5"
+                        oninput="updateMusicVol(this.value)">
+                </div>
+
+                <div class="settings-row">
+                    <label class="settings-label">Sound Effects (SFX)</label>
+                    <input type="range" id="vol-sfx" min="0" max="1" step="0.1" value="1.0"
+                        oninput="updateSfxVol(this.value)">
+                </div>
+
+                <div class="settings-row">
+                    <label class="settings-label" style="display:flex; align-items:center; gap:10px; cursor:pointer;">
+                        <span>Custom Cursor 👆</span>
+                        <input type="checkbox" id="cursor-toggle" onchange="toggleCursor(this.checked)"
+                            style="width:20px; height:20px;">
+                    </label>
+                </div>
+
+                <div class="settings-row"
+                    style="flex-direction:row; gap:10px; justify-content:center; margin-top:20px;">
+                    <button class="close-btn" onclick="closeSettings()">Close</button>
+                    <button id="btn-exit-game" class="close-btn" style="background:#d32f2f; border-color:#b71c1c;"
+                        onclick="exitGame()">Exit Game</button>
+                </div>
+            </div>
         </div>
 
         <div id="countdown-overlay" class="hidden">3</div>
@@ -572,8 +937,9 @@
     <div id="result-area" class="container">
         <!-- Changed Header ID to target dynamically -->
         <h2 id="result-title" style="color: var(--cny-bright-red)">🎉 Gong Xi Fa Cai! 🎉</h2>
-        <p>You completed the cycle in <strong id="final-time" style="font-size: 1.5rem; color: #d84315"></strong> seconds.</p>
-        
+        <p>You completed the cycle in <strong id="final-time" style="font-size: 1.5rem; color: #d84315"></strong>
+            seconds.</p>
+
         <div id="high-score-input" class="hidden">
             <p style="color: #2e7d32; font-weight: bold;">🏅 New High Score! 🏅</p>
             <input type="text" id="player-name" placeholder="Enter your name" maxlength="15">
@@ -584,7 +950,7 @@
         <div id="no-high-score" class="hidden">
             <button onclick="showLeaderboard()">View Leaderboard</button>
         </div>
-        
+
         <br>
         <button class="secondary" onclick="restartGame()">Play Again</button>
     </div>
@@ -593,7 +959,7 @@
     <div id="leaderboard-area" class="container">
         <h2>🏆 Leaderboard 🏆</h2>
         <div id="user-time-banner" class="your-time-display hidden"></div>
-        
+
         <!-- Scrollable Wrapper for Table -->
         <div class="leaderboard-scroll">
             <table id="ranking-table">
@@ -609,7 +975,7 @@
                 </tbody>
             </table>
         </div>
-        
+
         <div style="flex-shrink: 0; margin-top: auto;">
             <button onclick="restartGame()">Play Again</button>
             <button class="secondary" onclick="resetRankings()">Clear Data</button>
@@ -639,12 +1005,17 @@
         let startTime;
         let finalTime = 0;
         let isPlaying = false;
-        let lastScoreId = null; 
-        
+        let lastScoreId = null;
+
+        // Settings State
+        let musicVolume = 0.5;
+        let sfxVolume = 1.0;
+        let useCustomCursor = false;
+
         // GAME MODE: 'drag' or 'tap'
-        let gameMode = 'drag'; 
+        let gameMode = 'drag';
         let selectedTileIndex = null; // For Tap Mode
-        
+
         // --- DOM ELEMENTS ---
         const gameArea = document.getElementById('game-area');
         const resultArea = document.getElementById('result-area');
@@ -653,12 +1024,18 @@
         const timeDisplay = document.getElementById('time-display');
         const startOverlay = document.getElementById('start-overlay');
         const countdownOverlay = document.getElementById('countdown-overlay');
-        const musicBtn = document.getElementById('music-toggle');
         const bgm = document.getElementById('bgm-audio');
         const userTimeBanner = document.getElementById('user-time-banner');
         const resultTitle = document.getElementById('result-title');
         const customCursor = document.getElementById('custom-cursor');
-        
+
+        // Settings Elements
+        const settingsModal = document.getElementById('settings-modal');
+        const volMusicInput = document.getElementById('vol-music');
+        const volSfxInput = document.getElementById('vol-sfx');
+        const cursorToggle = document.getElementById('cursor-toggle');
+        const btnExitGame = document.getElementById('btn-exit-game');
+
         // Mode Selection Elements
         const btnModeDrag = document.getElementById('btn-mode-drag');
         const btnModeTap = document.getElementById('btn-mode-tap');
@@ -674,19 +1051,219 @@
         document.addEventListener('mousedown', () => customCursor.classList.add('cursor-click'));
         document.addEventListener('mouseup', () => customCursor.classList.remove('cursor-click'));
 
+        function toggleCursor(enable) {
+            useCustomCursor = enable;
+            if (enable) {
+                customCursor.style.display = 'block';
+                document.body.style.cursor = 'none';
+                /* Force buttons to inherit none */
+                const style = document.createElement('style');
+                style.id = 'cursor-style-override';
+                style.innerHTML = 'button, input, .zodiac-item, .settings-icon { cursor: none !important; }';
+                document.head.appendChild(style);
+            } else {
+                customCursor.style.display = 'none';
+                document.body.style.cursor = 'auto';
+                const style = document.getElementById('cursor-style-override');
+                if (style) style.remove();
+            }
+        }
+
         // --- SOUND & MUSIC ---
+        // Web Audio Context for Sound Effects
+        let audioCtx;
+
+        function initAudioContext() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+        }
+
+        // Load Settings
+        function loadSettings() {
+            const savedMusic = localStorage.getItem('cny_music_vol');
+            const savedSfx = localStorage.getItem('cny_sfx_vol');
+            const savedCursor = localStorage.getItem('cny_cursor');
+
+            if (savedMusic !== null) musicVolume = parseFloat(savedMusic);
+            if (savedSfx !== null) sfxVolume = parseFloat(savedSfx);
+            if (savedCursor !== null) useCustomCursor = (savedCursor === 'true');
+
+            if (volMusicInput) volMusicInput.value = musicVolume;
+            if (volSfxInput) volSfxInput.value = sfxVolume;
+            if (cursorToggle) cursorToggle.checked = useCustomCursor;
+
+            bgm.volume = musicVolume;
+            toggleCursor(useCustomCursor);
+        }
+
+        // Settings UI Functions
+        function openSettings() {
+            if (settingsModal) {
+                settingsModal.style.display = 'flex';
+                // Simpler: If startOverlay is hidden, show Exit Game
+                if (startOverlay.style.display === 'none') {
+                    btnExitGame.style.display = 'block';
+                } else {
+                    btnExitGame.style.display = 'none';
+                }
+            }
+        }
+
+        function closeSettings() {
+            if (settingsModal) settingsModal.style.display = 'none';
+            localStorage.setItem('cny_music_vol', musicVolume);
+            localStorage.setItem('cny_sfx_vol', sfxVolume);
+            localStorage.setItem('cny_cursor', useCustomCursor);
+        }
+
+        function exitGame() {
+            closeSettings();
+            // Reset to Start Screen
+            gameArea.style.display = 'block';
+            startOverlay.style.display = 'flex';
+            resultArea.style.display = 'none';
+            leaderboardArea.style.display = 'none';
+            countdownOverlay.classList.add('hidden');
+
+            isPlaying = false;
+            clearInterval(timerInterval);
+            timeDisplay.innerText = "0.0";
+            selectedTileIndex = null; // Fix: Reset selection state
+
+
+            // Re-init game state to clean up
+            currentOrder = [...correctOrder];
+            renderTiles();
+            listEl.classList.add('blurred');
+            startShuffleAnimation();
+        }
+
+        function updateMusicVol(val) {
+            musicVolume = parseFloat(val);
+            bgm.volume = musicVolume;
+
+            // Update mute icons if volume is 0
+            const allMusicBtns = document.querySelectorAll('.music-btn');
+            if (musicVolume === 0) {
+                allMusicBtns.forEach(btn => btn.innerText = "🔇");
+                bgm.pause();
+            } else {
+                if (bgm.paused && musicVolume > 0) bgm.play();
+                allMusicBtns.forEach(btn => btn.innerText = "🔊");
+            }
+        }
+
+        function updateSfxVol(val) {
+            sfxVolume = parseFloat(val);
+        }
+
+        function playCoinSound() {
+            if (!audioCtx) initAudioContext();
+            if (sfxVolume <= 0) return; // Mute check
+
+            const now = audioCtx.currentTime;
+            const boost = 3.0; // Boosted base volume
+
+            // Tone 1: B5 (987.77 Hz)
+            const osc1 = audioCtx.createOscillator();
+            const gain1 = audioCtx.createGain();
+            osc1.type = 'sine';
+            osc1.frequency.setValueAtTime(988, now);
+            osc1.connect(gain1);
+            gain1.connect(audioCtx.destination);
+            gain1.gain.setValueAtTime(0.1 * sfxVolume * boost, now);
+            gain1.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
+            osc1.start(now);
+            osc1.stop(now + 0.1);
+
+            // Tone 2: E6 (1318.51 Hz) slightly delayed
+            const osc2 = audioCtx.createOscillator();
+            const gain2 = audioCtx.createGain();
+            osc2.type = 'sine';
+            osc2.frequency.setValueAtTime(1319, now + 0.05);
+            osc2.connect(gain2);
+            gain2.connect(audioCtx.destination);
+            gain2.gain.setValueAtTime(0.1 * sfxVolume * boost, now + 0.05);
+            gain2.gain.exponentialRampToValueAtTime(0.01, now + 0.5);
+            osc2.start(now + 0.05);
+            osc2.stop(now + 0.5);
+        }
+
+        function playTouchSound() {
+            if (!audioCtx) initAudioContext();
+            if (sfxVolume <= 0) return;
+
+            const boost = 3.0; // Boosted base volume
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(800, audioCtx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(300, audioCtx.currentTime + 0.05);
+
+            gain.gain.setValueAtTime(0.15 * sfxVolume * boost, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01 * boost, audioCtx.currentTime + 0.05);
+
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.05);
+        }
+
+        // Smooth Volume Fading
+        function fadeAudio(audioElement, targetVolume, duration) {
+            // Respect the global musicVolume cap
+            const maxVol = musicVolume;
+            const actualTarget = Math.min(targetVolume, maxVol);
+
+            const startVolume = audioElement.volume;
+            const startTime = Date.now();
+            const change = actualTarget - startVolume;
+
+            const fadeInterval = setInterval(() => {
+                const currentTime = Date.now();
+                const elapsed = currentTime - startTime;
+
+                if (elapsed >= duration) {
+                    audioElement.volume = actualTarget;
+                    clearInterval(fadeInterval);
+                } else {
+                    audioElement.volume = startVolume + (change * (elapsed / duration));
+                }
+            }, 50); // Update every 50ms
+        }
+
+        // Toggle music for all buttons
         function toggleMusic() {
+            const allMusicBtns = document.querySelectorAll('.music-btn');
+
+            // Ensure AudioContext is ready when user interacts
+            initAudioContext();
+
             if (bgm.paused) {
-                bgm.play().catch(e => console.log("Interaction required first"));
-                musicBtn.innerText = "🔊";
+                bgm.play().then(() => {
+                    allMusicBtns.forEach(btn => btn.innerText = "🔊");
+                    // Restore volume if it was 0
+                    if (bgm.volume === 0) {
+                        bgm.volume = 0.5;
+                        musicVolume = 0.5;
+                        if (volMusicInput) volMusicInput.value = 0.5;
+                    }
+                }).catch(e => console.log("Interaction required first"));
             } else {
                 bgm.pause();
-                musicBtn.innerText = "🔇";
+                allMusicBtns.forEach(btn => btn.innerText = "🔇");
             }
         }
 
         // --- INITIALIZATION ---
         function initGame() {
+            loadSettings(); // Load volume settings
+
             gameArea.style.display = 'block';
             resultArea.style.display = 'none';
             leaderboardArea.style.display = 'none';
@@ -697,11 +1274,11 @@
             isPlaying = false;
             lastScoreId = null;
             selectedTileIndex = null;
-            
+
             // Create initial array
             currentOrder = [...correctOrder];
             renderTiles();
-            
+
             // Start background shuffling animation
             startShuffleAnimation();
         }
@@ -712,14 +1289,14 @@
                 const idx1 = Math.floor(Math.random() * 12);
                 const idx2 = Math.floor(Math.random() * 12);
                 swapItemsInArray(currentOrder, idx1, idx2);
-                renderTiles(false); 
-            }, 600);
+                renderTiles(false);
+            }, 200);
         }
 
         // --- MODE SELECTION ---
         function selectMode(mode) {
             gameMode = mode;
-            
+
             // Update UI buttons
             if (mode === 'drag') {
                 btnModeDrag.classList.add('active');
@@ -736,16 +1313,18 @@
 
         // --- COUNTDOWN & START LOGIC ---
         function startPreGameCountdown() {
-            if(bgm.paused) {
-                bgm.play().then(() => musicBtn.innerText = "🔊").catch(() => {});
+            if (bgm.paused) {
+                bgm.play().then(() => {
+                    document.querySelectorAll('.music-btn').forEach(btn => btn.innerText = "🔊");
+                }).catch(() => { });
             }
 
             startOverlay.style.display = 'none';
             countdownOverlay.classList.remove('hidden');
-            
+
             let count = 3;
             countdownOverlay.innerText = count;
-            
+
             const countTimer = setInterval(() => {
                 count--;
                 if (count > 0) {
@@ -761,18 +1340,18 @@
         }
 
         function realStartGame() {
-            clearInterval(shuffleInterval); 
-            
+            clearInterval(shuffleInterval);
+
             for (let i = currentOrder.length - 1; i > 0; i--) {
                 const j = Math.floor(Math.random() * (i + 1));
                 swapItemsInArray(currentOrder, i, j);
             }
-            
+
             isPlaying = true;
-            renderTiles(true); 
-            
+            renderTiles(true);
+
             listEl.classList.remove('blurred');
-            
+
             startTimer();
         }
 
@@ -790,10 +1369,10 @@
                 if (gameMode === 'tap' && selectedTileIndex === index) {
                     li.classList.add('selected');
                 }
-                
+
                 li.setAttribute('data-index', index);
                 li.innerHTML = `<span class="emoji">${item.icon}</span><span>${item.name}</span>`;
-                
+
                 if (enableInteractions && isPlaying) {
                     if (gameMode === 'drag') {
                         // DRAG MODE LISTENERS
@@ -803,9 +1382,9 @@
                         li.addEventListener('drop', dragDrop);
                         li.addEventListener('dragenter', dragEnter);
                         li.addEventListener('dragleave', dragLeave);
-                        
-                        li.addEventListener('touchstart', touchStart, {passive: false});
-                        li.addEventListener('touchmove', touchMove, {passive: false});
+
+                        li.addEventListener('touchstart', touchStart, { passive: false });
+                        li.addEventListener('touchmove', touchMove, { passive: false });
                         li.addEventListener('touchend', touchEnd);
                     } else {
                         // TAP MODE LISTENERS
@@ -813,7 +1392,7 @@
                         // Add touchstart for faster response on mobile if preferred, but click is safer for unified logic
                     }
                 }
-                
+
                 listEl.appendChild(li);
             });
         }
@@ -822,27 +1401,36 @@
         function handleTileClick(index) {
             if (!isPlaying) return;
 
+            try { playTouchSound(); } catch (e) { } // Sound effect
+
             // If no tile is selected, select this one
             if (selectedTileIndex === null) {
                 selectedTileIndex = index;
                 renderTiles(true); // Re-render to show selection
-            } 
+            }
             // If clicking the SAME tile, deselect it
             else if (selectedTileIndex === index) {
                 selectedTileIndex = null;
                 renderTiles(true);
-            } 
+            }
             // If clicking a DIFFERENT tile, swap them
             else {
+                // Sainty check: ensure selectedTileIndex is valid
+                if (selectedTileIndex >= currentOrder.length) {
+                    selectedTileIndex = null;
+                    renderTiles(true);
+                    return;
+                }
+
                 const idx1 = selectedTileIndex;
                 const idx2 = index;
-                
+
                 animateGridChange(() => {
                     swapItemsInArray(currentOrder, idx1, idx2);
                     selectedTileIndex = null; // Reset selection
                     renderTiles(true);
                 });
-                
+
                 checkCompletion();
             }
         }
@@ -853,7 +1441,7 @@
             const positions = {};
             const items = document.querySelectorAll('.zodiac-item');
             items.forEach(item => {
-                const name = item.querySelector('span:last-child').innerText; 
+                const name = item.querySelector('span:last-child').innerText;
                 const rect = item.getBoundingClientRect();
                 positions[name] = { left: rect.left, top: rect.top };
             });
@@ -867,21 +1455,21 @@
             newItems.forEach(item => {
                 const name = item.querySelector('span:last-child').innerText;
                 const old = oldPos[name];
-                
+
                 if (old) {
                     const rect = item.getBoundingClientRect();
                     const dx = old.left - rect.left;
                     const dy = old.top - rect.top;
-                    
+
                     if (dx !== 0 || dy !== 0) {
                         item.style.transition = 'none';
                         item.style.transform = `translate(${dx}px, ${dy}px)`;
-                        item.offsetHeight; 
-                        item.style.transition = 'transform 0.3s cubic-bezier(0.2, 0, 0.2, 1)'; 
+                        item.offsetHeight;
+                        item.style.transition = 'transform 0.3s cubic-bezier(0.2, 0, 0.2, 1)';
                         item.style.transform = '';
                         setTimeout(() => {
-                            if(item.style.transform === '') {
-                                item.style.transition = ''; 
+                            if (item.style.transform === '') {
+                                item.style.transition = '';
                             }
                         }, 300);
                     }
@@ -893,71 +1481,74 @@
         let dragStartIndex;
 
         function dragStart() {
-            if(!isPlaying) return;
+            if (!isPlaying) return;
+            try { playTouchSound(); } catch (e) { } // Sound effect
             dragStartIndex = +this.getAttribute('data-index');
             this.classList.add('dragging');
         }
         function dragOver(e) { e.preventDefault(); }
-        function dragEnter() { if(isPlaying) this.style.backgroundColor = '#ffe0b2'; }
-        function dragLeave() { if(isPlaying) this.style.backgroundColor = '#fff'; }
-        
+        function dragEnter() { if (isPlaying) this.style.backgroundColor = '#ffe0b2'; }
+        function dragLeave() { if (isPlaying) this.style.backgroundColor = '#fff'; }
+
         function dragDrop() {
-            if(!isPlaying) return;
+            if (!isPlaying) return;
             const dragEndIndex = +this.getAttribute('data-index');
-            
+
             animateGridChange(() => {
                 swapItemsInArray(currentOrder, dragStartIndex, dragEndIndex);
                 renderTiles(true);
             });
 
             this.classList.remove('dragging');
-            checkCompletion(); 
+            checkCompletion();
         }
 
         // --- TOUCH EVENTS (Mobile) ---
         let touchDragItem = null;
-        let dragAvatar = null; 
-        
+        let dragAvatar = null;
+
         function touchStart(e) {
-            if(!isPlaying || touchDragItem || e.touches.length > 1) return;
-            
+            if (!isPlaying || touchDragItem || e.touches.length > 1) return;
+
+            try { playTouchSound(); } catch (e) { } // Sound effect
+
             touchDragItem = this;
             dragStartIndex = +this.getAttribute('data-index');
             this.classList.add('dragging');
-            
+
             const touch = e.touches[0];
             const rect = this.getBoundingClientRect();
-            
+
             dragAvatar = this.cloneNode(true);
-            dragAvatar.classList.remove('dragging'); 
-            dragAvatar.classList.add('drag-avatar'); 
-            
+            dragAvatar.classList.remove('dragging');
+            dragAvatar.classList.add('drag-avatar');
+
             dragAvatar.style.width = rect.width + 'px';
             dragAvatar.style.height = rect.height + 'px';
-            dragAvatar.style.left = (touch.clientX - rect.width/2) + 'px';
-            dragAvatar.style.top = (touch.clientY - rect.height/2) + 'px';
-            
+            dragAvatar.style.left = (touch.clientX - rect.width / 2) + 'px';
+            dragAvatar.style.top = (touch.clientY - rect.height / 2) + 'px';
+
             document.body.appendChild(dragAvatar);
-            e.preventDefault(); 
+            e.preventDefault();
         }
 
         function touchMove(e) {
-            if(!isPlaying) return;
+            if (!isPlaying) return;
             e.preventDefault();
-            
+
             if (dragAvatar) {
                 const touch = e.touches[0];
                 const width = parseFloat(dragAvatar.style.width);
                 const height = parseFloat(dragAvatar.style.height);
-                dragAvatar.style.left = (touch.clientX - width/2) + 'px';
-                dragAvatar.style.top = (touch.clientY - height/2) + 'px';
+                dragAvatar.style.left = (touch.clientX - width / 2) + 'px';
+                dragAvatar.style.top = (touch.clientY - height / 2) + 'px';
             }
         }
 
         function touchEnd(e) {
-            if(!isPlaying) return;
+            if (!isPlaying) return;
             if (!touchDragItem) return;
-            
+
             if (dragAvatar) {
                 dragAvatar.remove();
                 dragAvatar = null;
@@ -966,7 +1557,7 @@
             const touch = e.changedTouches[0];
             const target = document.elementFromPoint(touch.clientX, touch.clientY);
             const droppedItem = target ? target.closest('.zodiac-item') : null;
-            
+
             if (droppedItem && droppedItem !== touchDragItem) {
                 const dragEndIndex = +droppedItem.getAttribute('data-index');
                 animateGridChange(() => {
@@ -976,10 +1567,10 @@
             } else {
                 renderTiles(true);
             }
-            
-            if(touchDragItem) touchDragItem.classList.remove('dragging');
+
+            if (touchDragItem) touchDragItem.classList.remove('dragging');
             touchDragItem = null;
-            checkCompletion(); 
+            checkCompletion();
         }
 
         // --- TIMER & WIN LOGIC ---
@@ -1001,15 +1592,23 @@
             }
 
             if (isCorrect) {
-                isPlaying = false; 
+                isPlaying = false;
                 clearInterval(timerInterval);
                 finalTime = parseFloat(timeDisplay.innerText);
-                
+
+                // Duck BGM Volume
+                if (!bgm.paused) {
+                    fadeAudio(bgm, 0.2, 500); // Fade to 20%
+                }
+
                 const listItems = document.querySelectorAll('.zodiac-item');
-                
+
                 listItems.forEach((item, index) => {
                     setTimeout(() => {
                         item.classList.add('correct');
+                        try {
+                            playCoinSound(); // Play coin sound
+                        } catch (e) { console.log(e); }
                     }, index * 100);
                 });
 
@@ -1023,7 +1622,7 @@
             gameArea.style.display = 'none';
             resultArea.style.display = 'block';
             document.getElementById('final-time').innerText = finalTime;
-            
+
             if (finalTime < 20) {
                 resultTitle.innerText = "⚡ Excellent! ⚡";
             } else if (finalTime <= 60) {
@@ -1033,6 +1632,13 @@
             }
 
             checkLeaderboardEligibility();
+
+            // Restore BGM Volume
+            if (!bgm.paused) {
+                setTimeout(() => {
+                    fadeAudio(bgm, 1.0, 1000); // Fade back to 100%
+                }, 500);
+            }
         }
 
         function restartGame() {
@@ -1060,45 +1666,45 @@
 
         function submitScore() {
             const name = document.getElementById('player-name').value.trim() || "Anonymous";
-            lastScoreId = Date.now(); 
+            lastScoreId = Date.now();
             const newEntry = { name: name, time: finalTime, id: lastScoreId };
-            
+
             let scores = getScores();
             scores.push(newEntry);
             scores.sort((a, b) => a.time - b.time);
-            
+
             if (scores.length > 10) scores = scores.slice(0, 10);
             localStorage.setItem('zodiac_ranking_cny', JSON.stringify(scores));
-            
+
             showLeaderboard(lastScoreId);
         }
 
         function showLeaderboard(highlightId = null) {
             resultArea.style.display = 'none';
             leaderboardArea.style.display = 'block';
-            
+
             if (finalTime > 0) {
                 userTimeBanner.innerText = `Your Time: ${finalTime}s`;
                 userTimeBanner.classList.remove('hidden');
             } else {
                 userTimeBanner.classList.add('hidden');
             }
-            
+
             const scores = getScores();
             const tbody = document.querySelector('#ranking-table tbody');
             tbody.innerHTML = '';
 
             scores.forEach((entry, index) => {
                 const tr = document.createElement('tr');
-                
+
                 if (highlightId && entry.id === highlightId) {
                     tr.classList.add('highlight');
                 }
 
                 let medal = "";
-                if(index === 0) medal = "🥇 ";
-                if(index === 1) medal = "🥈 ";
-                if(index === 2) medal = "🥉 ";
+                if (index === 0) medal = "🥇 ";
+                if (index === 1) medal = "🥈 ";
+                if (index === 2) medal = "🥉 ";
 
                 tr.innerHTML = `
                     <td>${medal}${index + 1}</td>
@@ -1108,13 +1714,13 @@
                 tbody.appendChild(tr);
             });
 
-            if(scores.length === 0) {
+            if (scores.length === 0) {
                 tbody.innerHTML = '<tr><td colspan="3" style="text-align:center">No records yet.</td></tr>';
             }
         }
 
         function resetRankings() {
-            if(confirm("Clear leaderboard?")) {
+            if (confirm("Clear leaderboard?")) {
                 localStorage.removeItem('zodiac_ranking_cny');
                 showLeaderboard();
             }
