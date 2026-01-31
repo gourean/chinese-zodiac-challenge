@@ -862,7 +862,7 @@
         <div class="controls-bar">
             <!-- Empty div for grid balance -->
             <div style="width: 1rem;"></div>
-            <div class="timer">⏱️ <span id="time-display">0.0</span>s</div>
+            <div class="timer">⏱️ <span id="time-display">0.000</span>s</div>
             <button class="settings-icon" onclick="openSettings()" title="Settings"
                 style="font-size:1.5rem; color: #d84315;">⚙️</button>
         </div>
@@ -1146,7 +1146,7 @@
 
             isPlaying = false;
             clearInterval(timerInterval);
-            timeDisplay.innerText = "0.0";
+            timeDisplay.innerText = "0.000";
             selectedTileIndex = null; // Fix: Reset selection state
 
 
@@ -1285,7 +1285,7 @@
             startOverlay.style.display = 'flex';
             countdownOverlay.classList.add('hidden');
             listEl.classList.add('blurred');
-            timeDisplay.innerText = "0.0";
+            timeDisplay.innerText = "0.000";
             isPlaying = false;
             lastScoreId = null;
             selectedTileIndex = null;
@@ -1596,8 +1596,8 @@
             startTime = Date.now();
             timerInterval = setInterval(() => {
                 const elapsed = Date.now() - startTime;
-                timeDisplay.innerText = (elapsed / 1000).toFixed(1);
-            }, 100);
+                timeDisplay.innerText = (elapsed / 1000).toFixed(3);
+            }, 10);
         }
 
         function checkCompletion() {
@@ -1612,7 +1612,9 @@
             if (isCorrect) {
                 isPlaying = false;
                 clearInterval(timerInterval);
-                finalTime = parseFloat(timeDisplay.innerText);
+                const elapsed = Date.now() - startTime;
+                finalTime = parseFloat((elapsed / 1000).toFixed(3));
+                timeDisplay.innerText = finalTime.toFixed(3);
 
                 // Duck BGM Volume removed as requested
 
