@@ -1639,20 +1639,26 @@
                         if (s.time < finalTime) rank++;
                     });
 
+                    let delayToWin = 3000; // Default buffer
+
                     if (rank === 1) {
                         playTop3Fanfare(10); // Gold
+                        delayToWin = (10 * 800) + 500; // 8.5s
                     } else if (rank === 2) {
                         playTop3Fanfare(5);  // Silver
+                        delayToWin = (5 * 800) + 500; // 4.5s
                     } else if (rank === 3) {
                         playTop3Fanfare(3);  // Bronze
+                        delayToWin = (3 * 800) + 500; // 2.9s
                     } else {
                         playVictorySound();
+                        delayToWin = 2500; // Wait for victory sound
                     }
-                }, 2400);
 
-                setTimeout(() => {
-                    handleWin();
-                }, 4000);
+                    setTimeout(() => {
+                        handleWin();
+                    }, delayToWin);
+                }, 2400);
             }
         }
 
