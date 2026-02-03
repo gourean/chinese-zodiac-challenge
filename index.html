@@ -80,25 +80,7 @@
             box-sizing: border-box;
         }
 
-        /* Decoration Borders */
-        .container::before {
-            content: "☁️";
-            position: absolute;
-            top: 5px;
-            left: 10px;
-            font-size: 24px;
-            opacity: 0.5;
-        }
 
-        .container::after {
-            content: "☁️";
-            position: absolute;
-            top: 5px;
-            right: 10px;
-            font-size: 24px;
-            opacity: 0.5;
-            transform: scaleX(-1);
-        }
 
         /* Areas - Force flex to manage internal scrolling/layout */
         #game-area[style*="block"],
@@ -266,7 +248,43 @@
             z-index: 10;
             padding: 20px;
             box-sizing: border-box;
+            /* Allow scrolling if content is too tall (e.g., landscape on TV) */
+            overflow-y: auto;
+            scrollbar-width: thin;
+            scrollbar-color: var(--cny-gold) rgba(139, 0, 0, 0.5);
         }
+
+        /* Ensure content doesn't get cut off at top when using justify-content: center with overflow */
+        #start-overlay::before,
+        #start-overlay::after {
+            content: '';
+            flex-basis: auto;
+            /* Allow flexibility */
+        }
+
+        /* Inner container for start screen content to ensuring it centers nicely but scrolls */
+        .start-content-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: auto;
+            /* This helps with safe centering in overflow flex containers */
+            width: 100%;
+        }
+
+        .start-content-row {
+            display: flex;
+            flex-direction: column;
+            /* Default: stacked */
+            align-items: center;
+            width: 100%;
+        }
+
+        .start-text-group {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
 
         /* Settings Modal */
         #settings-modal {
@@ -388,6 +406,7 @@
             gap: 6px;
             width: 180px;
             margin-bottom: 10px;
+            counter-reset: tile-count;
         }
 
         .mini-tile {
@@ -396,6 +415,18 @@
             background: #fff3e0;
             border: 1px solid #ffcc80;
             border-radius: 4px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: #888;
+            /* Grey out number */
+            font-weight: bold;
+            font-size: 0.8rem;
+        }
+
+        .mini-tile::before {
+            counter-increment: tile-count;
+            content: counter(tile-count);
         }
 
         /* Highlight specific tiles for demos */
@@ -825,6 +856,67 @@
             td {
                 padding: 5px 10px;
             }
+
+            /* Dynamic Side-by-Side Layout for Start Screen */
+            .start-content-row {
+                flex-direction: row;
+                /* Switch to row */
+                justify-content: center;
+                gap: 30px;
+                align-items: center;
+            }
+
+            .start-text-group {
+                text-align: right;
+                /* Text aligns towards center */
+                margin-bottom: 0;
+                flex: 1;
+                display: flex;
+                flex-direction: column;
+                align-items: flex-end;
+            }
+
+            /* Fix for Start Screen overflowing on short landscape devices (like Smart TVs) */
+            .instruction-container {
+                margin: 0 !important;
+                padding: 10px;
+                flex: 1;
+                /* Keep it compact */
+                align-self: center;
+            }
+
+            /* Adjust text sizes */
+            #start-overlay h2 {
+                font-size: 1.6rem !important;
+                margin-bottom: 5px !important;
+            }
+
+            #start-overlay p {
+                font-size: 1rem !important;
+                margin-bottom: 5px !important;
+                max-width: 250px;
+                /* Prevent too wide text */
+            }
+
+            /* Keep graphics small */
+            .mini-grid {
+                width: 140px;
+                gap: 4px;
+                margin-bottom: 5px;
+            }
+
+            .mode-switch {
+                margin-bottom: 8px;
+                padding: 3px;
+                transform: scale(0.9);
+            }
+
+            /* Button adjustment */
+            #start-overlay .primary-btn {
+                margin-top: 15px;
+                padding: 8px 40px;
+                font-size: 1.2rem;
+            }
         }
     </style>
 </head>
@@ -872,42 +964,52 @@
         </ul>
 
         <div id="start-overlay">
-            <!-- Start Screen Music Button Removed -->
-            <button id="settings-btn" class="settings-icon"
-                style="position:absolute; top:20px; right:20px; font-size:2rem; z-index:20; color:var(--cny-gold);"
-                onclick="openSettings()" title="Settings">⚙️</button>
+            <div class="start-content-wrapper">
+                <!-- Start Screen Music Button Removed -->
+                <button id="settings-btn" class="settings-icon"
+                    style="position:absolute; top:20px; right:20px; font-size:2rem; z-index:20; color:var(--cny-gold);"
+                    onclick="openSettings()" title="Settings">⚙️</button>
 
-            <h2 style="color:white; margin-bottom:5px; text-shadow: 1px 1px 2px black;">Select Gameplay</h2>
-            <p
-                style="color: white; margin-bottom: 15px; margin-top:0; text-shadow: 1px 1px 2px black; font-weight: bold;">
-                Arrange the 12 zodiacs in correct order<br>(starts with Rat 🐀)</p>
+                <div class="start-content-row">
+                    <!-- LEFT Content (Text) -->
+                    <div class="start-text-group">
+                        <h2 style="color:white; margin-bottom:5px; text-shadow: 1px 1px 2px black;">Select Gameplay
+                        </h2>
+                        <p
+                            style="color: white; margin-bottom: 15px; margin-top:0; text-shadow: 1px 1px 2px black; font-weight: bold;">
+                            Arrange the 12 zodiacs in correct order<br>(starts with Rat 🐀)</p>
+                    </div>
 
-            <div class="instruction-container">
-                <!-- Mode Switcher -->
-                <div class="mode-switch">
-                    <button class="mode-btn active" id="btn-mode-drag" onclick="selectMode('drag')">🖐️ Drag</button>
-                    <button class="mode-btn" id="btn-mode-tap" onclick="selectMode('tap')">👆 Tap</button>
+                    <!-- RIGHT Content (Instruction) -->
+                    <div class="instruction-container">
+                        <!-- Mode Switcher -->
+                        <div class="mode-switch">
+                            <button class="mode-btn active" id="btn-mode-drag" onclick="selectMode('drag')">🖐️
+                                Drag</button>
+                            <button class="mode-btn" id="btn-mode-tap" onclick="selectMode('tap')">👆 Tap</button>
+                        </div>
+
+                        <div class="mini-grid">
+                            <div class="mini-tile highlight-a"></div>
+                            <div class="mini-tile"></div>
+                            <div class="mini-tile"></div>
+                            <div class="mini-tile"></div>
+                            <div class="mini-tile"></div>
+                            <div class="mini-tile"></div>
+                            <div class="mini-tile"></div>
+                            <div class="mini-tile"></div>
+                            <div class="mini-tile"></div>
+                            <div class="mini-tile"></div>
+                            <div class="mini-tile"></div>
+                            <div class="mini-tile"></div>
+                        </div>
+                        <!-- The animation class will change based on mode -->
+                        <div id="demo-hand" class="hand-cursor-demo anim-drag">👆</div>
+                    </div>
                 </div>
 
-                <div class="mini-grid">
-                    <div class="mini-tile highlight-a"></div>
-                    <div class="mini-tile"></div>
-                    <div class="mini-tile"></div>
-                    <div class="mini-tile"></div>
-                    <div class="mini-tile"></div>
-                    <div class="mini-tile"></div>
-                    <div class="mini-tile"></div>
-                    <div class="mini-tile"></div>
-                    <div class="mini-tile"></div>
-                    <div class="mini-tile"></div>
-                    <div class="mini-tile"></div>
-                    <div class="mini-tile"></div>
-                </div>
-                <!-- The animation class will change based on mode -->
-                <div id="demo-hand" class="hand-cursor-demo anim-drag">👆</div>
+                <button class="primary-btn" onclick="startPreGameCountdown()">Start Game</button>
             </div>
-
-            <button class="primary-btn" onclick="startPreGameCountdown()">Start Game</button>
         </div>
 
         <!-- Settings Modal -->
